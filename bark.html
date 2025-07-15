@@ -284,7 +284,7 @@
                     usernameDisplay.textContent = username;
                 } else {
                     usernameDisplay.textContent = 'Guest';
-                    accountModal.classList.remove('hidden'); // Prompt for username if guest
+                    accountModal.classList.remove('hidden'); 
                 }
             }
         }
@@ -346,6 +346,8 @@
         // --- Event Handlers ---
         anonymousSignInBtn.addEventListener('click', async () => { 
             loginError.classList.add('hidden');
+            anonymousSignInBtn.disabled = true;
+            anonymousSignInBtn.textContent = 'Signing in...';
             try { 
                 await signInAnonymously(auth); 
             } catch (e) { 
@@ -356,6 +358,9 @@
                     loginError.textContent = 'Sign in failed. Please try again.';
                     loginError.classList.remove('hidden');
                 }
+            } finally {
+                anonymousSignInBtn.disabled = false;
+                anonymousSignInBtn.textContent = 'Continue Anonymously';
             }
         });
         signOutBtn.addEventListener('click', () => signOut(auth));
@@ -365,7 +370,7 @@
         
         let syncInterval;
         generateSyncCodeBtn.addEventListener('click', async () => {
-            const code = Math.random().toString().substring(2, 8);
+            const code = Math.random().toString().substring(2, 8).toUpperCase();
             const expiresAt = Timestamp.fromMillis(Date.now() + 5 * 60 * 1000);
             await setDoc(doc(db, SYNC_CODES_COLLECTION, code), { userId, expiresAt });
             
@@ -378,7 +383,7 @@
                     syncCodeTimer.textContent = 'Code expired.';
                     clearInterval(syncInterval);
                 } else {
-                    syncCodeTimer.textContent = `Expires in ${secondsLeft} seconds.`;
+                    syncCodeTimer.textContent = `Expires in ${Math.floor(secondsLeft / 60)}m ${secondsLeft % 60}s`;
                 }
             };
             updateTimer();
@@ -393,44 +398,47 @@
             syncCodeError.classList.add('hidden');
             const syncButton = e.target.querySelector('button');
             syncButton.disabled = true;
+            syncButton.textContent = 'Verifying...';
 
-            const codeRef = doc(db, SYNC_CODES_COLLECTION, code);
-            const codeDoc = await getDoc(codeRef);
-
-            if (!codeDoc.exists() || codeDoc.data().expiresAt.toMillis() < Date.now()) {
-                syncCodeError.textContent = 'Invalid or expired code.';
-                syncCodeError.classList.remove('hidden');
-                syncButton.disabled = false;
-                return;
-            }
-
-            const sourceUserId = codeDoc.data().userId;
-            const newUserId = auth.currentUser.uid;
-            
             try {
+                const codeRef = doc(db, SYNC_CODES_COLLECTION, code);
+                const codeDoc = await getDoc(codeRef);
+
+                if (!codeDoc.exists() || codeDoc.data().expiresAt.toMillis() < Date.now()) {
+                    throw new Error('Invalid or expired code.');
+                }
+                
+                syncButton.textContent = 'Signing in...';
+                const userCredential = await signInAnonymously(auth);
+                const newUserId = userCredential.user.uid;
+
+                syncButton.textContent = 'Syncing data...';
+                const sourceUserId = codeDoc.data().userId;
                 const batch = writeBatch(db);
+
                 const sourceUserDoc = await getDoc(doc(db, USERS_COLLECTION, sourceUserId));
-                if (sourceUserDoc.exists()) {
-                    batch.set(doc(db, USERS_COLLECTION, newUserId), sourceUserDoc.data());
-                }
+                if (sourceUserDoc.exists()) batch.set(doc(db, USERS_COLLECTION, newUserId), sourceUserDoc.data());
+
                 const sourceTravelPlan = await getDoc(doc(db, TRAVEL_COLLECTION, sourceUserId));
-                if(sourceTravelPlan.exists()) {
-                    batch.set(doc(db, TRAVEL_COLLECTION, newUserId), sourceTravelPlan.data());
-                }
+                if(sourceTravelPlan.exists()) batch.set(doc(db, TRAVEL_COLLECTION, newUserId), sourceTravelPlan.data());
+
                 const sourcePackingItems = await getDocs(collection(db, USERS_COLLECTION, sourceUserId, 'packing_items'));
-                sourcePackingItems.forEach(itemDoc => {
-                    batch.set(doc(db, USERS_COLLECTION, newUserId, 'packing_items', itemDoc.id), itemDoc.data());
-                });
+                sourcePackingItems.forEach(itemDoc => batch.set(doc(db, USERS_COLLECTION, newUserId, 'packing_items', itemDoc.id), itemDoc.data()));
+
                 batch.delete(codeRef);
                 await batch.commit();
+
                 syncCodeInputModal.classList.add('hidden');
                 syncCodeInput.value = '';
+
             } catch (error) {
                 console.error("Sync failed:", error);
-                syncCodeError.textContent = 'Data sync failed. Please try again.';
+                syncCodeError.textContent = error.message || 'Data sync failed. Please try again.';
                 syncCodeError.classList.remove('hidden');
+                if (auth.currentUser && auth.currentUser.isAnonymous) await signOut(auth);
             } finally {
                 syncButton.disabled = false;
+                syncButton.textContent = 'Sync Device';
             }
         });
 
@@ -444,10 +452,7 @@
                 try {
                     await setDoc(userDocRef, { username: newUsername }, { merge: true });
                     username = newUsername; usernameDisplay.textContent = username;
-                    // Only close the modal if the username is not 'Guest'
-                    if (newUsername !== 'Guest') {
-                        accountModal.classList.add('hidden');
-                    }
+                    if (newUsername !== 'Guest') accountModal.classList.add('hidden');
                 } catch (error) {
                     console.error("Error setting username:", error);
                     usernameError.textContent = "Failed to save. Check Firestore rules.";
@@ -467,7 +472,7 @@
         usernameDisplay.addEventListener('click', () => { 
             usernameInput.value = username || ''; 
             permanentIdDisplay.value = userId || '';
-            syncCodeSection.classList.add('hidden'); // Reset sync code view
+            syncCodeSection.classList.add('hidden');
             accountModal.classList.remove('hidden'); 
         });
 
