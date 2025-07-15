@@ -293,7 +293,6 @@ service cloud.firestore {
             }
 
             onAuthStateChanged(auth, async (user) => {
-                loadingModal.classList.add('hidden');
                 if (user) {
                     try {
                         userId = user.uid;
@@ -308,6 +307,8 @@ service cloud.firestore {
                             document.getElementById('firestoreErrorModal').classList.remove('hidden');
                         }
                         await signOut(auth);
+                    } finally {
+                        loadingModal.classList.add('hidden');
                     }
                 } else {
                     userId = null; username = null; userDocRef = null;
@@ -316,6 +317,7 @@ service cloud.firestore {
                     showLoginState('emailForm');
                     loginModal.classList.remove('hidden');
                     appContainer.classList.add('hidden');
+                    loadingModal.classList.add('hidden');
                 }
             });
         }
