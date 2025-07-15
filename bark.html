@@ -114,7 +114,12 @@
     </div>
 
     <!-- Modals -->
-    <div id="loginModal" class="modal-backdrop">
+    <div id="loadingModal" class="modal-backdrop">
+        <div class="text-center">
+            <h3 class="text-xl font-bold">Loading Planner...</h3>
+        </div>
+    </div>
+    <div id="loginModal" class="modal-backdrop hidden">
         <div class="card w-full max-w-sm">
             <div id="emailFormContainer">
                 <h3 class="text-xl font-bold mb-4 text-center">Sign In / Register</h3>
@@ -137,10 +142,6 @@
                     <p id="confirmEmailError" class="text-red-400 text-sm mt-2 hidden"></p>
                     <button type="submit" class="btn btn-primary w-full mt-4">Complete Sign-In</button>
                 </form>
-            </div>
-            <div id="signingInContainer" class="hidden text-center">
-                 <h3 class="text-xl font-bold mb-4">Signing you in...</h3>
-                 <p class="text-gray-300">Please wait while we verify your login link.</p>
             </div>
         </div>
     </div>
@@ -217,6 +218,7 @@ service cloud.firestore {
         }
 
         const appContainer = document.getElementById('app');
+        const loadingModal = document.getElementById('loadingModal');
         const loginModal = document.getElementById('loginModal');
         const usernameDisplay = document.getElementById('usernameDisplay');
         const packingForm = document.getElementById('add-packing-item-form');
@@ -250,8 +252,7 @@ service cloud.firestore {
         const confirmEmailForm = document.getElementById('confirmEmailForm');
         const confirmEmailInput = document.getElementById('confirmEmailInput');
         const confirmEmailError = document.getElementById('confirmEmailError');
-        const signingInContainer = document.getElementById('signingInContainer');
-
+        
         const actionCodeSettings = {
             url: window.location.href,
             handleCodeInApp: true,
@@ -261,20 +262,19 @@ service cloud.firestore {
             emailFormContainer.classList.add('hidden');
             emailSentContainer.classList.add('hidden');
             confirmEmailContainer.classList.add('hidden');
-            signingInContainer.classList.add('hidden');
             if (state === 'emailForm') emailFormContainer.classList.remove('hidden');
             if (state === 'emailSent') emailSentContainer.classList.remove('hidden');
             if (state === 'confirmEmail') confirmEmailContainer.classList.remove('hidden');
-            if (state === 'signingIn') signingInContainer.classList.remove('hidden');
         };
 
-        async function handleEmailLinkSignIn() {
+        async function initializeAppFlow() {
             if (isSignInWithEmailLink(auth, window.location.href)) {
-                showLoginState('signingIn');
                 let email = window.localStorage.getItem('emailForSignIn');
                 if (!email) {
+                    loadingModal.classList.add('hidden');
+                    loginModal.classList.remove('hidden');
                     showLoginState('confirmEmail');
-                    return; // Stop here and wait for user to submit email
+                    return;
                 }
                 try {
                     await signInWithEmailLink(auth, email, window.location.href);
@@ -284,16 +284,16 @@ service cloud.firestore {
                     }
                 } catch (error) {
                     console.error("Email link sign in failed:", error);
+                    loadingModal.classList.add('hidden');
+                    loginModal.classList.remove('hidden');
                     showLoginState('emailForm');
                     emailError.textContent = "Sign in failed. The link may be expired or invalid. Please try again.";
                     emailError.classList.remove('hidden');
                 }
             }
-        }
 
-        if (auth) {
-            handleEmailLinkSignIn();
             onAuthStateChanged(auth, async (user) => {
+                loadingModal.classList.add('hidden');
                 if (user) {
                     try {
                         userId = user.uid;
@@ -318,6 +318,10 @@ service cloud.firestore {
                     appContainer.classList.add('hidden');
                 }
             });
+        }
+
+        if (auth) {
+            initializeAppFlow();
         }
 
         async function checkUsername(user) {
@@ -421,7 +425,8 @@ service cloud.firestore {
             e.preventDefault();
             const email = confirmEmailInput.value;
             confirmEmailError.classList.add('hidden');
-            showLoginState('signingIn');
+            loadingModal.classList.remove('hidden');
+            loginModal.classList.add('hidden');
             try {
                 await signInWithEmailLink(auth, email, window.location.href);
                  window.localStorage.removeItem('emailForSignIn');
@@ -430,6 +435,8 @@ service cloud.firestore {
                 }
             } catch (error) {
                 console.error("Confirmation sign in failed:", error);
+                loadingModal.classList.add('hidden');
+                loginModal.classList.remove('hidden');
                 showLoginState('confirmEmail');
                 confirmEmailError.textContent = "Sign in failed. Invalid email or expired link.";
                 confirmEmailError.classList.remove('hidden');
