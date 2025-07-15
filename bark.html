@@ -129,6 +129,19 @@
                 <h3 class="text-xl font-bold mb-4">Check Your Email</h3>
                 <p class="text-gray-300">A login link has been sent to <strong id="sentToEmail"></strong>. Click the link to sign in.</p>
             </div>
+             <div id="confirmEmailContainer" class="hidden">
+                <h3 class="text-xl font-bold mb-4">Confirm Your Email</h3>
+                <p class="text-gray-300 mb-4 text-sm">To complete sign-in, please enter the email address the link was sent to.</p>
+                <form id="confirmEmailForm">
+                    <input type="email" id="confirmEmailInput" class="form-input" placeholder="Email address" required>
+                    <p id="confirmEmailError" class="text-red-400 text-sm mt-2 hidden"></p>
+                    <button type="submit" class="btn btn-primary w-full mt-4">Complete Sign-In</button>
+                </form>
+            </div>
+            <div id="signingInContainer" class="hidden text-center">
+                 <h3 class="text-xl font-bold mb-4">Signing you in...</h3>
+                 <p class="text-gray-300">Please wait while we verify your login link.</p>
+            </div>
         </div>
     </div>
     <div id="accountModal" class="modal-backdrop hidden">
@@ -233,28 +246,47 @@ service cloud.firestore {
         const emailFormContainer = document.getElementById('emailFormContainer');
         const emailSentContainer = document.getElementById('emailSentContainer');
         const sentToEmail = document.getElementById('sentToEmail');
+        const confirmEmailContainer = document.getElementById('confirmEmailContainer');
+        const confirmEmailForm = document.getElementById('confirmEmailForm');
+        const confirmEmailInput = document.getElementById('confirmEmailInput');
+        const confirmEmailError = document.getElementById('confirmEmailError');
+        const signingInContainer = document.getElementById('signingInContainer');
 
         const actionCodeSettings = {
             url: window.location.href,
             handleCodeInApp: true,
         };
+        
+        const showLoginState = (state) => {
+            emailFormContainer.classList.add('hidden');
+            emailSentContainer.classList.add('hidden');
+            confirmEmailContainer.classList.add('hidden');
+            signingInContainer.classList.add('hidden');
+            if (state === 'emailForm') emailFormContainer.classList.remove('hidden');
+            if (state === 'emailSent') emailSentContainer.classList.remove('hidden');
+            if (state === 'confirmEmail') confirmEmailContainer.classList.remove('hidden');
+            if (state === 'signingIn') signingInContainer.classList.remove('hidden');
+        };
 
         async function handleEmailLinkSignIn() {
             if (isSignInWithEmailLink(auth, window.location.href)) {
+                showLoginState('signingIn');
                 let email = window.localStorage.getItem('emailForSignIn');
                 if (!email) {
-                    email = window.prompt('Please provide your email for confirmation');
+                    showLoginState('confirmEmail');
+                    return; // Stop here and wait for user to submit email
                 }
                 try {
                     await signInWithEmailLink(auth, email, window.location.href);
                     window.localStorage.removeItem('emailForSignIn');
-                    // Clean the URL
                     if (window.history && window.history.replaceState) {
                         window.history.replaceState({}, document.title, window.location.pathname);
                     }
                 } catch (error) {
                     console.error("Email link sign in failed:", error);
-                    // Handle error
+                    showLoginState('emailForm');
+                    emailError.textContent = "Sign in failed. The link may be expired or invalid. Please try again.";
+                    emailError.classList.remove('hidden');
                 }
             }
         }
@@ -281,6 +313,7 @@ service cloud.firestore {
                     userId = null; username = null; userDocRef = null;
                     listeners.forEach(unsubscribe => unsubscribe());
                     listeners = [];
+                    showLoginState('emailForm');
                     loginModal.classList.remove('hidden');
                     appContainer.classList.add('hidden');
                 }
@@ -371,8 +404,7 @@ service cloud.firestore {
                 await sendSignInLinkToEmail(auth, email, actionCodeSettings);
                 window.localStorage.setItem('emailForSignIn', email);
                 sentToEmail.textContent = email;
-                emailFormContainer.classList.add('hidden');
-                emailSentContainer.classList.remove('hidden');
+                showLoginState('emailSent');
             } catch (error) {
                 console.error("Failed to send link:", error);
                 emailError.textContent = "Failed to send link. Please check the email address.";
@@ -382,6 +414,25 @@ service cloud.firestore {
                 emailError.classList.remove('hidden');
             } finally {
                 sendLinkBtn.disabled = false;
+            }
+        });
+        
+        confirmEmailForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = confirmEmailInput.value;
+            confirmEmailError.classList.add('hidden');
+            showLoginState('signingIn');
+            try {
+                await signInWithEmailLink(auth, email, window.location.href);
+                 window.localStorage.removeItem('emailForSignIn');
+                if (window.history && window.history.replaceState) {
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+            } catch (error) {
+                console.error("Confirmation sign in failed:", error);
+                showLoginState('confirmEmail');
+                confirmEmailError.textContent = "Sign in failed. Invalid email or expired link.";
+                confirmEmailError.classList.remove('hidden');
             }
         });
 
