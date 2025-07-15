@@ -90,6 +90,10 @@
         .hidden {
             display: none;
         }
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
     </style>
 </head>
 <body class="antialiased">
@@ -176,6 +180,45 @@
     </div>
     <div id="initErrorModal" class="modal-backdrop hidden"><div class="card w-full max-w-md"><h3 class="text-xl font-bold mb-4 text-red-400">Application Error</h3><p class="text-gray-300 mb-4">Could not initialize the application. Please check your Firebase credentials in the HTML file.</p></div></div>
     <div id="authErrorModal" class="modal-backdrop hidden"><div class="card w-full max-w-md"><h3 class="text-xl font-bold mb-4 text-yellow-400">Action Required: Enable Sign-In Method</h3><p class="text-gray-300 mb-4">The application failed to sign you in. Please enable Anonymous sign-in in your Firebase project.</p><div class="text-left text-sm bg-gray-900 p-4 rounded-lg"><p class="font-bold text-gray-200">How to fix:</p><ol class="list-decimal list-inside mt-2 space-y-1 text-gray-300"><li>Go to the <a href="https://console.firebase.google.com/" target="_blank" class="text-indigo-400 underline">Firebase Console</a>.</li><li>Select your project: <strong>barkplanner</strong>.</li><li>In the left menu, go to <strong>Authentication</strong>.</li><li>Click the <strong>Sign-in method</strong> tab.</li><li>Find <strong>Anonymous</strong> and enable it.</li><li>Reload this page.</li></ol></div></div></div>
+    <div id="firestoreErrorModal" class="modal-backdrop hidden">
+        <div class="card w-full max-w-lg">
+            <h3 class="text-xl font-bold mb-4 text-yellow-400">Action Required: Update Firestore Rules</h3>
+            <p class="text-gray-300 mb-4">The application connected to the database but failed to read or write data. This is usually because of restrictive security rules in your Firebase project.</p>
+            <div class="text-left text-sm bg-gray-900 p-4 rounded-lg">
+                <p class="font-bold text-gray-200">How to fix:</p>
+                <ol class="list-decimal list-inside mt-2 space-y-1 text-gray-300">
+                    <li>Go to the <a href="https://console.firebase.google.com/" target="_blank" class="text-indigo-400 underline">Firebase Console</a>.</li>
+                    <li>Select your project: <strong>barkplanner</strong>.</li>
+                    <li>In the left menu, go to <strong>Firestore Database</strong>.</li>
+                    <li>Click the <strong>Rules</strong> tab.</li>
+                    <li>Replace the existing rules with the following to allow logged-in users to access the data:</li>
+                </ol>
+                <pre class="bg-gray-800 text-gray-200 p-2 mt-2 rounded-md text-xs overflow-x-auto"><code>rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /item_requests/{docId} {
+      allow read, write: if request.auth != null;
+    }
+    match /travel_plans/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth.uid == userId;
+    }
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth.uid == userId;
+      match /packing_items/{itemId} {
+        allow read, write: if request.auth.uid == userId;
+      }
+    }
+    match /sync_codes/{code} {
+        allow read, write: if request.auth != null;
+    }
+  }
+}</code></pre>
+                <p class="mt-2 text-gray-400">After updating the rules, reload this page.</p>
+            </div>
+        </div>
+    </div>
     <div id="confirmationModal" class="modal-backdrop hidden"><div class="card w-full max-w-sm"><h3 class="text-xl font-bold mb-4" id="modalTitle"></h3><p class="text-gray-300 mb-6" id="modalMessage"></p><div class="flex justify-end gap-4"><button id="modalCancel" class="btn btn-secondary">Cancel</button><button id="modalConfirm" class="btn btn-danger">Confirm</button></div></div></div>
     <div id="qrModal" class="modal-backdrop hidden"><div class="card w-full max-w-sm text-center"><h3 class="text-xl font-bold mb-4">Scan to Join!</h3><canvas id="qrCanvas"></canvas><p class="text-gray-400 mt-4 text-sm">Scan this code with another device to join this planner.</p><button id="closeQrBtn" class="btn btn-secondary w-full mt-4">Close</button></div></div>
 
@@ -255,12 +298,24 @@
         if (auth) {
             onAuthStateChanged(auth, async (user) => {
                 if (user) {
-                    userId = user.uid;
-                    userDocRef = doc(db, USERS_COLLECTION, userId);
-                    await checkUsername(user);
-                    loadAllData();
-                    loginModal.classList.add('hidden');
-                    appContainer.classList.remove('hidden');
+                    try {
+                        userId = user.uid;
+                        userDocRef = doc(db, USERS_COLLECTION, userId);
+                        await checkUsername(user);
+                        loadAllData();
+                        loginModal.classList.add('hidden');
+                        appContainer.classList.remove('hidden');
+                    } catch (e) {
+                        console.error("Error during post-login setup:", e);
+                        if (e.code && (e.code.includes('permission-denied') || e.code.includes('unauthenticated'))) {
+                            document.getElementById('firestoreErrorModal').classList.remove('hidden');
+                        } else {
+                            loginModal.classList.remove('hidden');
+                            loginError.textContent = 'An unexpected error occurred. Please try again.';
+                            loginError.classList.remove('hidden');
+                        }
+                        await signOut(auth);
+                    }
                 } else {
                     userId = null; username = null; userDocRef = null;
                     listeners.forEach(unsubscribe => unsubscribe());
@@ -409,11 +464,17 @@
                 }
                 
                 syncButton.textContent = 'Signing in...';
+                // We need to sign out the current temp user before signing in with the new one.
+                if (auth.currentUser) {
+                    await signOut(auth);
+                }
+                const sourceUserId = codeDoc.data().userId;
+                // This part is tricky. We can't "log in" as another user.
+                // We need to copy the data. Let's sign in a new user and copy.
                 const userCredential = await signInAnonymously(auth);
                 const newUserId = userCredential.user.uid;
 
                 syncButton.textContent = 'Syncing data...';
-                const sourceUserId = codeDoc.data().userId;
                 const batch = writeBatch(db);
 
                 const sourceUserDoc = await getDoc(doc(db, USERS_COLLECTION, sourceUserId));
@@ -435,7 +496,6 @@
                 console.error("Sync failed:", error);
                 syncCodeError.textContent = error.message || 'Data sync failed. Please try again.';
                 syncCodeError.classList.remove('hidden');
-                if (auth.currentUser && auth.currentUser.isAnonymous) await signOut(auth);
             } finally {
                 syncButton.disabled = false;
                 syncButton.textContent = 'Sync Device';
