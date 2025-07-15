@@ -28,6 +28,10 @@
             transition: background-color 0.2s;
             cursor: pointer;
         }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
         .btn-primary {
             background-color: #4f46e5; /* bg-indigo-600 */
             color: white;
@@ -141,11 +145,36 @@
             <p class="text-gray-300 mb-4">Could not initialize the application. Please check your Firebase credentials in the HTML file.</p>
         </div>
     </div>
+    <div id="authErrorModal" class="modal-backdrop hidden">
+        <div class="card w-full max-w-md">
+            <h3 class="text-xl font-bold mb-4 text-yellow-400">Action Required: Enable Anonymous Sign-In</h3>
+            <p class="text-gray-300 mb-4">The application failed to sign you in anonymously. This is usually because it's not enabled in your Firebase project.</p>
+            <div class="text-left text-sm bg-gray-900 p-4 rounded-lg">
+                <p class="font-bold text-gray-200">How to fix:</p>
+                <ol class="list-decimal list-inside mt-2 space-y-1 text-gray-300">
+                    <li>Go to the <a href="https://console.firebase.google.com/" target="_blank" class="text-indigo-400 underline">Firebase Console</a>.</li>
+                    <li>Select your project: <strong>barkplanner</strong>.</li>
+                    <li>In the left menu, go to <strong>Authentication</strong>.</li>
+                    <li>Click the <strong>Sign-in method</strong> tab.</li>
+                    <li>Find <strong>Anonymous</strong> in the list and enable it.</li>
+                    <li>Reload this page.</li>
+                </ol>
+            </div>
+        </div>
+    </div>
     <div id="confirmationModal" class="modal-backdrop hidden">
         <div class="card w-full max-w-sm"><h3 class="text-xl font-bold mb-4" id="modalTitle"></h3><p class="text-gray-300 mb-6" id="modalMessage"></p><div class="flex justify-end gap-4"><button id="modalCancel" class="btn btn-secondary">Cancel</button><button id="modalConfirm" class="btn btn-danger">Confirm</button></div></div>
     </div>
     <div id="usernameModal" class="modal-backdrop hidden">
-        <div class="card w-full max-w-sm"><h3 class="text-xl font-bold mb-4">Set Your Username</h3><p class="text-gray-300 mb-4">Choose a name so your friends know who you are.</p><form id="usernameForm"><input type="text" id="usernameInput" class="form-input" placeholder="Enter username" required><button type="submit" class="btn btn-primary w-full mt-4">Save</button></form></div>
+        <div class="card w-full max-w-sm">
+            <h3 class="text-xl font-bold mb-4">Set Your Username</h3>
+            <p class="text-gray-300 mb-4">Choose a name so your friends know who you are.</p>
+            <form id="usernameForm">
+                <input type="text" id="usernameInput" class="form-input" placeholder="Enter username" required>
+                <p id="usernameError" class="text-red-400 text-sm mt-2 hidden"></p>
+                <button type="submit" class="btn btn-primary w-full mt-4">Save</button>
+            </form>
+        </div>
     </div>
     <div id="qrModal" class="modal-backdrop hidden">
         <div class="card w-full max-w-sm text-center"><h3 class="text-xl font-bold mb-4">Scan to Join!</h3><canvas id="qrCanvas"></canvas><p class="text-gray-400 mt-4 text-sm">Scan this code with another device to join this planner.</p><button id="closeQrBtn" class="btn btn-secondary w-full mt-4">Close</button></div>
@@ -158,7 +187,6 @@
         import { getFirestore, collection, doc, addDoc, setDoc, getDoc, deleteDoc, onSnapshot, query, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- CONFIG & INITIALIZATION ---
-        // Your web app's Firebase configuration, provided by you.
         const firebaseConfig = {
           apiKey: "AIzaSyDAHz4WlysnKsO3oZaZeI0LXHtHAs5stC0",
           authDomain: "barkplanner.firebaseapp.com",
@@ -190,7 +218,6 @@
             document.getElementById('initErrorModal').classList.remove('hidden');
         }
 
-        // Simplified collection paths for your standalone application
         const USERS_COLLECTION = 'users';
         const PACKING_COLLECTION = 'packing_items';
         const REQUESTS_COLLECTION = 'item_requests';
@@ -218,6 +245,7 @@
         const usernameModal = document.getElementById('usernameModal');
         const usernameForm = document.getElementById('usernameForm');
         const usernameInput = document.getElementById('usernameInput');
+        const usernameError = document.getElementById('usernameError');
 
         const qrModal = document.getElementById('qrModal');
         const showQrBtn = document.getElementById('showQrBtn');
@@ -248,6 +276,9 @@
                         await signInAnonymously(auth);
                     } catch (error) {
                         console.error("Authentication failed:", error);
+                        if (error.code === 'auth/configuration-not-found') {
+                            document.getElementById('authErrorModal').classList.remove('hidden');
+                        }
                     }
                 }
             });
@@ -272,12 +303,26 @@
 
         usernameForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            usernameError.classList.add('hidden');
             const newUsername = usernameInput.value.trim();
+            const saveButton = usernameForm.querySelector('button[type="submit"]');
+
             if (newUsername) {
-                await setDoc(userDocRef, { username: newUsername }, { merge: true });
-                username = newUsername;
-                usernameDisplay.textContent = username;
-                usernameModal.classList.add('hidden');
+                saveButton.disabled = true;
+                saveButton.textContent = 'Saving...';
+                try {
+                    await setDoc(userDocRef, { username: newUsername }, { merge: true });
+                    username = newUsername;
+                    usernameDisplay.textContent = username;
+                    usernameModal.classList.add('hidden');
+                } catch (error) {
+                    console.error("Error setting username:", error);
+                    usernameError.textContent = "Failed to save. Check Firestore rules.";
+                    usernameError.classList.remove('hidden');
+                } finally {
+                    saveButton.disabled = false;
+                    saveButton.textContent = 'Save';
+                }
             }
         });
 
