@@ -100,10 +100,7 @@
             <p class="text-gray-400 mt-2">A shared space to coordinate packing and travel.</p>
             <div class="mt-4 flex justify-center items-center gap-4">
                  <div class="text-xs text-gray-500 bg-gray-800 p-2 rounded-lg inline-flex items-center gap-2">
-                    Logged in as: <span id="usernameDisplay" class="font-mono text-indigo-400 cursor-pointer" title="Click to change username">Loading...</span>
-                    <button id="linkDeviceBtn" class="btn btn-secondary !p-1 !text-xs" title="Link a new device">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.72"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.72-1.72"></path></svg>
-                    </button>
+                    Logged in as: <span id="usernameDisplay" class="font-mono text-indigo-400 cursor-pointer" title="My Account & Syncing">Loading...</span>
                     <button id="signOutBtn" class="btn btn-danger !p-1 !text-xs" title="Sign Out">
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
                     </button>
@@ -128,6 +125,7 @@
                 <button id="anonymousSignInBtn" class="btn btn-secondary w-full">Continue Anonymously</button>
                 <button id="useSyncCodeBtn" class="btn btn-primary w-full">Use a Sync Code</button>
             </div>
+            <p id="loginError" class="text-red-400 text-sm mt-4 text-center hidden"></p>
         </div>
     </div>
     <div id="syncCodeInputModal" class="modal-backdrop hidden">
@@ -142,25 +140,49 @@
              <button id="cancelSyncBtn" class="btn btn-secondary w-full mt-2">Cancel</button>
         </div>
     </div>
-    <div id="showSyncCodeModal" class="modal-backdrop hidden">
-        <div class="card w-full max-w-sm text-center">
-            <h3 class="text-xl font-bold mb-4">Your Sync Code</h3>
-            <p class="text-gray-300 mb-4 text-sm">Enter this code on your new device within 5 minutes.</p>
-            <div id="syncCodeDisplay" class="text-4xl font-bold tracking-[0.2em] bg-gray-900 p-4 rounded-lg">------</div>
-            <p id="syncCodeTimer" class="text-yellow-400 text-sm mt-4"></p>
-            <button id="closeShowSyncCodeBtn" class="btn btn-secondary w-full mt-6">Close</button>
+    <div id="accountModal" class="modal-backdrop hidden">
+        <div class="card w-full max-w-md">
+            <h3 class="text-xl font-bold mb-4">My Account</h3>
+            <form id="usernameForm" class="mb-6">
+                <label for="usernameInput" class="block text-sm font-medium text-gray-300 mb-1">Your Username</label>
+                <div class="flex gap-2">
+                    <input type="text" id="usernameInput" class="form-input flex-grow" placeholder="Enter username" required>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+                <p id="usernameError" class="text-red-400 text-sm mt-2 hidden"></p>
+            </form>
+
+            <div class="border-t border-gray-700 pt-6">
+                <h4 class="text-lg font-bold mb-2">Sync & Backup</h4>
+                <p class="text-sm text-gray-400 mb-4">Use a temporary code to link a new device, or save your permanent ID as a backup.</p>
+                
+                <button id="generateSyncCodeBtn" class="btn btn-secondary w-full">Generate 5-Minute Sync Code</button>
+
+                <div id="syncCodeSection" class="mt-4 text-center hidden">
+                    <div id="syncCodeDisplay" class="text-4xl font-bold tracking-[0.2em] bg-gray-900 p-4 rounded-lg">------</div>
+                    <p id="syncCodeTimer" class="text-yellow-400 text-sm mt-2"></p>
+                </div>
+
+                <div class="mt-6">
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Permanent User ID (Backup)</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="permanentIdDisplay" class="form-input bg-gray-900 text-gray-400 flex-grow" readonly>
+                        <button id="copyUserIdBtn" class="btn btn-secondary">Copy</button>
+                    </div>
+                </div>
+            </div>
+            <button id="closeAccountModalBtn" class="btn btn-secondary w-full mt-8">Close</button>
         </div>
     </div>
     <div id="initErrorModal" class="modal-backdrop hidden"><div class="card w-full max-w-md"><h3 class="text-xl font-bold mb-4 text-red-400">Application Error</h3><p class="text-gray-300 mb-4">Could not initialize the application. Please check your Firebase credentials in the HTML file.</p></div></div>
     <div id="authErrorModal" class="modal-backdrop hidden"><div class="card w-full max-w-md"><h3 class="text-xl font-bold mb-4 text-yellow-400">Action Required: Enable Sign-In Method</h3><p class="text-gray-300 mb-4">The application failed to sign you in. Please enable Anonymous sign-in in your Firebase project.</p><div class="text-left text-sm bg-gray-900 p-4 rounded-lg"><p class="font-bold text-gray-200">How to fix:</p><ol class="list-decimal list-inside mt-2 space-y-1 text-gray-300"><li>Go to the <a href="https://console.firebase.google.com/" target="_blank" class="text-indigo-400 underline">Firebase Console</a>.</li><li>Select your project: <strong>barkplanner</strong>.</li><li>In the left menu, go to <strong>Authentication</strong>.</li><li>Click the <strong>Sign-in method</strong> tab.</li><li>Find <strong>Anonymous</strong> and enable it.</li><li>Reload this page.</li></ol></div></div></div>
     <div id="confirmationModal" class="modal-backdrop hidden"><div class="card w-full max-w-sm"><h3 class="text-xl font-bold mb-4" id="modalTitle"></h3><p class="text-gray-300 mb-6" id="modalMessage"></p><div class="flex justify-end gap-4"><button id="modalCancel" class="btn btn-secondary">Cancel</button><button id="modalConfirm" class="btn btn-danger">Confirm</button></div></div></div>
-    <div id="usernameModal" class="modal-backdrop hidden"><div class="card w-full max-w-sm"><h3 class="text-xl font-bold mb-4">Set Your Username</h3><p class="text-gray-300 mb-4">Choose a name so your friends know who you are.</p><form id="usernameForm"><input type="text" id="usernameInput" class="form-input" placeholder="Enter username" required><p id="usernameError" class="text-red-400 text-sm mt-2 hidden"></p><button type="submit" class="btn btn-primary w-full mt-4">Save</button></form></div></div>
     <div id="qrModal" class="modal-backdrop hidden"><div class="card w-full max-w-sm text-center"><h3 class="text-xl font-bold mb-4">Scan to Join!</h3><canvas id="qrCanvas"></canvas><p class="text-gray-400 mt-4 text-sm">Scan this code with another device to join this planner.</p><button id="closeQrBtn" class="btn btn-secondary w-full mt-4">Close</button></div></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, addDoc, setDoc, getDoc, deleteDoc, onSnapshot, query, updateDoc, writeBatch, serverTimestamp, Timestamp, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, addDoc, setDoc, getDoc, deleteDoc, onSnapshot, query, updateDoc, writeBatch, Timestamp, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
           apiKey: "AIzaSyDAHz4WlysnKsO3oZaZeI0LXHtHAs5stC0",
@@ -194,6 +216,7 @@
 
         const appContainer = document.getElementById('app');
         const loginModal = document.getElementById('loginModal');
+        const loginError = document.getElementById('loginError');
         const usernameDisplay = document.getElementById('usernameDisplay');
         const packingForm = document.getElementById('add-packing-item-form');
         const packingItemNameInput = document.getElementById('packing-item-name');
@@ -206,26 +229,28 @@
         const confirmationModal = document.getElementById('confirmationModal');
         const modalConfirmBtn = document.getElementById('modalConfirm');
         const modalCancelBtn = document.getElementById('modalCancel');
-        const usernameModal = document.getElementById('usernameModal');
+        const accountModal = document.getElementById('accountModal');
         const usernameForm = document.getElementById('usernameForm');
         const usernameInput = document.getElementById('usernameInput');
         const usernameError = document.getElementById('usernameError');
+        const closeAccountModalBtn = document.getElementById('closeAccountModalBtn');
         const qrModal = document.getElementById('qrModal');
         const showQrBtn = document.getElementById('showQrBtn');
         const closeQrBtn = document.getElementById('closeQrBtn');
         const anonymousSignInBtn = document.getElementById('anonymousSignInBtn');
         const signOutBtn = document.getElementById('signOutBtn');
-        const linkDeviceBtn = document.getElementById('linkDeviceBtn');
         const useSyncCodeBtn = document.getElementById('useSyncCodeBtn');
         const syncCodeInputModal = document.getElementById('syncCodeInputModal');
         const syncCodeForm = document.getElementById('syncCodeForm');
         const syncCodeInput = document.getElementById('syncCodeInput');
         const syncCodeError = document.getElementById('syncCodeError');
         const cancelSyncBtn = document.getElementById('cancelSyncBtn');
-        const showSyncCodeModal = document.getElementById('showSyncCodeModal');
+        const generateSyncCodeBtn = document.getElementById('generateSyncCodeBtn');
+        const syncCodeSection = document.getElementById('syncCodeSection');
         const syncCodeDisplay = document.getElementById('syncCodeDisplay');
         const syncCodeTimer = document.getElementById('syncCodeTimer');
-        const closeShowSyncCodeBtn = document.getElementById('closeShowSyncCodeBtn');
+        const permanentIdDisplay = document.getElementById('permanentIdDisplay');
+        const copyUserIdBtn = document.getElementById('copyUserIdBtn');
 
         if (auth) {
             onAuthStateChanged(auth, async (user) => {
@@ -251,16 +276,15 @@
             if (userDoc.exists() && userDoc.data().username) {
                 username = userDoc.data().username;
                 usernameDisplay.textContent = username;
-                usernameModal.classList.add('hidden');
             } else {
-                usernameDisplay.textContent = 'Guest';
-                if (!user.isAnonymous) {
-                    const newUsername = user.displayName || 'Guest';
+                const newUsername = user.isAnonymous ? 'Guest' : (user.displayName || 'Guest');
+                if (newUsername !== 'Guest') {
                     await setDoc(userDocRef, { username: newUsername }, { merge: true });
                     username = newUsername;
                     usernameDisplay.textContent = username;
                 } else {
-                    usernameModal.classList.remove('hidden');
+                    usernameDisplay.textContent = 'Guest';
+                    accountModal.classList.remove('hidden'); // Prompt for username if guest
                 }
             }
         }
@@ -320,20 +344,33 @@
         }
 
         // --- Event Handlers ---
-        anonymousSignInBtn.addEventListener('click', async () => { try { await signInAnonymously(auth); } catch (e) { console.error(e); if (e.code === 'auth/configuration-not-found') document.getElementById('authErrorModal').classList.remove('hidden'); }});
+        anonymousSignInBtn.addEventListener('click', async () => { 
+            loginError.classList.add('hidden');
+            try { 
+                await signInAnonymously(auth); 
+            } catch (e) { 
+                console.error(e); 
+                if (e.code === 'auth/configuration-not-found') {
+                    document.getElementById('authErrorModal').classList.remove('hidden'); 
+                } else {
+                    loginError.textContent = 'Sign in failed. Please try again.';
+                    loginError.classList.remove('hidden');
+                }
+            }
+        });
         signOutBtn.addEventListener('click', () => signOut(auth));
         useSyncCodeBtn.addEventListener('click', () => syncCodeInputModal.classList.remove('hidden'));
         cancelSyncBtn.addEventListener('click', () => syncCodeInputModal.classList.add('hidden'));
-        closeShowSyncCodeBtn.addEventListener('click', () => showSyncCodeModal.classList.add('hidden'));
+        closeAccountModalBtn.addEventListener('click', () => accountModal.classList.add('hidden'));
         
         let syncInterval;
-        linkDeviceBtn.addEventListener('click', async () => {
+        generateSyncCodeBtn.addEventListener('click', async () => {
             const code = Math.random().toString().substring(2, 8);
             const expiresAt = Timestamp.fromMillis(Date.now() + 5 * 60 * 1000);
             await setDoc(doc(db, SYNC_CODES_COLLECTION, code), { userId, expiresAt });
             
             syncCodeDisplay.textContent = code;
-            showSyncCodeModal.classList.remove('hidden');
+            syncCodeSection.classList.remove('hidden');
 
             const updateTimer = () => {
                 const secondsLeft = Math.round((expiresAt.toMillis() - Date.now()) / 1000);
@@ -350,7 +387,7 @@
 
         syncCodeForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const code = syncCodeInput.value.trim();
+            const code = syncCodeInput.value.trim().toUpperCase();
             if (code.length !== 6) return;
             
             syncCodeError.classList.add('hidden');
@@ -406,7 +443,11 @@
                 saveButton.disabled = true; saveButton.textContent = 'Saving...';
                 try {
                     await setDoc(userDocRef, { username: newUsername }, { merge: true });
-                    username = newUsername; usernameDisplay.textContent = username; usernameModal.classList.add('hidden');
+                    username = newUsername; usernameDisplay.textContent = username;
+                    // Only close the modal if the username is not 'Guest'
+                    if (newUsername !== 'Guest') {
+                        accountModal.classList.add('hidden');
+                    }
                 } catch (error) {
                     console.error("Error setting username:", error);
                     usernameError.textContent = "Failed to save. Check Firestore rules.";
@@ -422,7 +463,19 @@
         travelForm.addEventListener('submit', async (e) => { e.preventDefault(); if (username && userId) { await setDoc(doc(db, TRAVEL_COLLECTION, userId), { name: username, arrival: document.getElementById('travel-arrival').value, departure: document.getElementById('travel-departure').value, mode: document.getElementById('travel-mode').value, notes: document.getElementById('travel-notes').value, updatedAt: new Date(), userId: userId }); } });
         requestList.addEventListener('click', (e) => { if (e.target.classList.contains('fulfill-request-item')) { updateDoc(doc(db, REQUESTS_COLLECTION, e.target.dataset.id), { status: 'fulfilled', fulfilledBy: userId }); } });
         travelPlansList.addEventListener('click', (e) => { if (e.target.classList.contains('delete-travel-plan')) { showConfirmationModal('Delete Plan', 'Are you sure?', () => { deleteDoc(doc(db, TRAVEL_COLLECTION, e.target.dataset.id)); travelForm.reset(); }); } });
-        usernameDisplay.addEventListener('click', () => { usernameInput.value = username || ''; usernameModal.classList.remove('hidden'); });
+        
+        usernameDisplay.addEventListener('click', () => { 
+            usernameInput.value = username || ''; 
+            permanentIdDisplay.value = userId || '';
+            syncCodeSection.classList.add('hidden'); // Reset sync code view
+            accountModal.classList.remove('hidden'); 
+        });
+
+        copyUserIdBtn.addEventListener('click', () => {
+            permanentIdDisplay.select();
+            document.execCommand('copy');
+        });
+
         showQrBtn.addEventListener('click', () => { new QRious({ element: document.getElementById('qrCanvas'), value: window.location.href, size: 256, padding: 16 }); qrModal.classList.remove('hidden'); });
         closeQrBtn.addEventListener('click', () => qrModal.classList.add('hidden'));
         modalCancelBtn.addEventListener('click', () => confirmationModal.classList.add('hidden'));
