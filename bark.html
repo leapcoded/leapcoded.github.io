@@ -138,9 +138,7 @@
     <div id="initErrorModal" class="modal-backdrop hidden">
         <div class="card w-full max-w-md">
             <h3 class="text-xl font-bold mb-4 text-red-400">Application Error</h3>
-            <p class="text-gray-300 mb-4">Could not initialize the application. This is likely because the database configuration is missing.</p>
-            <p class="text-gray-400 text-sm">This planner is designed to run in a specific environment that provides database credentials automatically. To host it yourself (e.g., on GitHub Pages), you'll need to create a free Firebase project and add your project's configuration details to the HTML file.</p>
-            <p class="text-gray-400 text-sm mt-2">See the comments in the &lt;script&gt; section for more details.</p>
+            <p class="text-gray-300 mb-4">Could not initialize the application. Please check your Firebase credentials in the HTML file.</p>
         </div>
     </div>
     <div id="confirmationModal" class="modal-backdrop hidden">
@@ -156,23 +154,11 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, addDoc, setDoc, getDoc, deleteDoc, onSnapshot, query, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- CONFIG & INITIALIZATION ---
-        // IMPORTANT: This application requires a Firebase project to function.
-        // The '__firebase_config' variable is injected automatically in the original
-        // development environment. To host this yourself, you need to create a
-        // free project on the Firebase website (firebase.google.com).
-        
-        // 1. Create a new Firebase project.
-        // 2. Go to Project Settings -> General tab.
-        // 3. Under "Your apps", create a new Web App.
-        // 4. Firebase will give you a 'firebaseConfig' object.
-        // 5. Replace the line below that starts with "const firebaseConfig = ..."
-        //    with the configuration object they provide you.
-        
-   
+        // Your web app's Firebase configuration, provided by you.
         const firebaseConfig = {
           apiKey: "AIzaSyDAHz4WlysnKsO3oZaZeI0LXHtHAs5stC0",
           authDomain: "barkplanner.firebaseapp.com",
@@ -183,16 +169,17 @@
           measurementId: "G-KRQRVW2LSJ"
         };
 
-    
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'barktangent-2026-planner';
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-
         let app, auth, db;
         let userId = null;
         let username = null;
         let isAuthReady = false;
         let userDocRef = null;
-        let usernames = {}; // Cache for usernames
+        
+        // --- DATA CACHING ---
+        let usernames = {};
+        let packingItems = [];
+        let requestItems = [];
+        let travelPlans = [];
 
         try {
             app = initializeApp(firebaseConfig);
@@ -200,14 +187,14 @@
             db = getFirestore(app);
         } catch (e) {
             console.error("Error initializing Firebase:", e);
-            // Show a user-friendly modal instead of a blank page or console error
             document.getElementById('initErrorModal').classList.remove('hidden');
         }
 
-        const USERS_COLLECTION = `/artifacts/${appId}/public/data/users`;
-        const PACKING_COLLECTION = `/artifacts/${appId}/public/data/packing_items`;
-        const REQUESTS_COLLECTION = `/artifacts/${appId}/public/data/item_requests`;
-        const TRAVEL_COLLECTION = `/artifacts/${appId}/public/data/travel_plans`;
+        // Simplified collection paths for your standalone application
+        const USERS_COLLECTION = 'users';
+        const PACKING_COLLECTION = 'packing_items';
+        const REQUESTS_COLLECTION = 'item_requests';
+        const TRAVEL_COLLECTION = 'travel_plans';
 
         // --- DOM ELEMENTS ---
         const usernameDisplay = document.getElementById('usernameDisplay');
@@ -247,8 +234,8 @@
         modalConfirmBtn.addEventListener('click', () => { if (confirmCallback) confirmCallback(); confirmationModal.classList.add('hidden'); });
         modalCancelBtn.addEventListener('click', () => confirmationModal.classList.add('hidden'));
 
-        // --- USERNAME & AUTH ---
-        if (auth) { // Only proceed if Firebase initialized correctly
+        // --- AUTHENTICATION & USER SETUP ---
+        if (auth) {
             onAuthStateChanged(auth, async (user) => {
                 if (user) {
                     userId = user.uid;
@@ -258,11 +245,7 @@
                     loadAllData();
                 } else {
                      try {
-                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                            await signInWithCustomToken(auth, __initial_auth_token);
-                        } else {
-                            await signInAnonymously(auth);
-                        }
+                        await signInAnonymously(auth);
                     } catch (error) {
                         console.error("Authentication failed:", error);
                     }
@@ -277,6 +260,7 @@
                 usernameDisplay.textContent = username;
                 usernameModal.classList.add('hidden');
             } else {
+                usernameDisplay.textContent = 'Guest';
                 usernameModal.classList.remove('hidden');
             }
         }
@@ -297,6 +281,7 @@
             }
         });
 
+        // --- DATA LOADING & LISTENERS ---
         function loadAllData() {
             if (!isAuthReady || !db) return;
             listenToUsernames();
@@ -305,136 +290,105 @@
             listenToTravelPlans();
         }
         
-        // --- QR CODE LOGIC ---
-        showQrBtn.addEventListener('click', () => {
-            const qr = new QRious({
-                element: document.getElementById('qrCanvas'),
-                value: window.location.href,
-                size: 256,
-                padding: 16,
-            });
-            qrModal.classList.remove('hidden');
-        });
-        closeQrBtn.addEventListener('click', () => qrModal.classList.add('hidden'));
-
-        // --- DATA LISTENERS & RENDERING ---
-        
         function listenToUsernames() {
             onSnapshot(collection(db, USERS_COLLECTION), (snapshot) => {
                 snapshot.docs.forEach(doc => {
                     usernames[doc.id] = doc.data().username || `User...${doc.id.substring(0,4)}`;
                 });
-                listenToPackingList();
-                listenToItemRequests();
-                listenToTravelPlans();
+                renderPackingList();
+                renderRequestList();
+                renderTravelPlans();
             });
         }
-
-        function getUserDisplayName(uid) {
-            return usernames[uid] || `User...${uid.substring(0,4)}`;
-        }
-
-        packingForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const itemName = packingItemNameInput.value.trim();
-            if (itemName && userId) {
-                await addDoc(collection(db, PACKING_COLLECTION), { name: itemName, packedBy: userId, createdAt: new Date() });
-                packingItemNameInput.value = '';
-            }
-        });
 
         function listenToPackingList() {
             onSnapshot(query(collection(db, PACKING_COLLECTION)), (snapshot) => {
-                packingList.innerHTML = '';
-                const docs = snapshot.docs.sort((a, b) => a.data().createdAt?.toDate() - b.data().createdAt?.toDate());
-                if (docs.length === 0) packingList.innerHTML = `<li class="text-gray-500">Nothing packed yet.</li>`;
-                docs.forEach(docSnap => {
-                    const item = docSnap.data();
-                    const li = document.createElement('li');
-                    li.className = 'flex justify-between items-center bg-gray-700 p-2 rounded-lg';
-                    li.innerHTML = `<span>${item.name}</span><div class="flex items-center gap-2"><span class="text-xs text-indigo-300">${getUserDisplayName(item.packedBy)}</span>${item.packedBy === userId ? `<button data-id="${docSnap.id}" class="delete-packing-item btn btn-danger btn-sm !p-1 !text-xs">X</button>` : ''}</div>`;
-                    packingList.appendChild(li);
-                });
+                packingItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                packingItems.sort((a, b) => (a.createdAt?.toDate() || 0) - (b.createdAt?.toDate() || 0));
+                renderPackingList();
             });
         }
-        packingList.addEventListener('click', (e) => {
-            if (e.target.classList.contains('delete-packing-item')) {
-                showConfirmationModal('Delete Item', 'Are you sure?', () => deleteDoc(doc(db, PACKING_COLLECTION, e.target.dataset.id)));
-            }
-        });
-
-        requestForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const itemName = requestItemNameInput.value.trim();
-            if (itemName && userId) {
-                await addDoc(collection(db, REQUESTS_COLLECTION), { name: itemName, requestedBy: userId, status: 'requested', fulfilledBy: null, createdAt: new Date() });
-                requestItemNameInput.value = '';
-            }
-        });
 
         function listenToItemRequests() {
             onSnapshot(query(collection(db, REQUESTS_COLLECTION)), (snapshot) => {
-                requestList.innerHTML = '';
-                const docs = snapshot.docs.sort((a, b) => a.data().createdAt?.toDate() - b.data().createdAt?.toDate());
-                if (docs.length === 0) requestList.innerHTML = `<li class="text-gray-500">No requests yet.</li>`;
-                docs.forEach(docSnap => {
-                    const item = docSnap.data();
-                    const li = document.createElement('li');
-                    li.className = 'flex justify-between items-center bg-gray-700 p-2 rounded-lg';
-                    let content = `<span>${item.name} <em class="text-xs text-gray-400">(req. by ${getUserDisplayName(item.requestedBy)})</em></span>`;
-                    if (item.status === 'fulfilled') {
-                        content += `<span class="text-sm text-green-400">Brought by ${getUserDisplayName(item.fulfilledBy)}</span>`;
-                    } else {
-                        content += `<button data-id="${docSnap.id}" class="fulfill-request-item btn btn-success btn-sm !py-1 !px-2">I'll bring it!</button>`;
-                    }
-                    li.innerHTML = content;
-                    requestList.appendChild(li);
-                });
+                requestItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                requestItems.sort((a, b) => (a.createdAt?.toDate() || 0) - (b.createdAt?.toDate() || 0));
+                renderRequestList();
             });
         }
-        requestList.addEventListener('click', (e) => {
-            if (e.target.classList.contains('fulfill-request-item')) {
-                updateDoc(doc(db, REQUESTS_COLLECTION, e.target.dataset.id), { status: 'fulfilled', fulfilledBy: userId });
-            }
-        });
-
-        travelForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            if (username && userId) {
-                await setDoc(doc(db, TRAVEL_COLLECTION, userId), {
-                    name: username,
-                    arrival: travelArrivalInput.value.trim(),
-                    departure: travelDepartureInput.value.trim(),
-                    mode: travelModeInput.value.trim(),
-                    notes: travelNotesInput.value.trim(),
-                    updatedAt: new Date(),
-                    userId: userId
-                });
-            }
-        });
 
         function listenToTravelPlans() {
             onSnapshot(query(collection(db, TRAVEL_COLLECTION)), (snapshot) => {
-                travelPlansList.innerHTML = '';
-                const docs = snapshot.docs.sort((a, b) => a.data().updatedAt?.toDate() - b.data().updatedAt?.toDate());
-                if (docs.length === 0) travelPlansList.innerHTML = `<p class="text-gray-500">No travel plans saved yet.</p>`;
-                docs.forEach(docSnap => {
-                    const plan = docSnap.data();
-                    const div = document.createElement('div');
-                    div.className = 'bg-gray-700 p-3 rounded-lg';
-                    div.innerHTML = `<div class="flex justify-between items-start"><h4 class="font-bold text-lg text-indigo-300">${plan.name}</h4>${plan.userId === userId ? `<button data-id="${docSnap.id}" class="delete-travel-plan btn btn-danger btn-sm !p-1 !text-xs">X</button>` : ''}</div><p class="text-sm"><strong class="text-gray-400">Arrival:</strong> ${plan.arrival || 'N/A'}</p><p class="text-sm"><strong class="text-gray-400">Departure:</strong> ${plan.departure || 'N/A'}</p><p class="text-sm"><strong class="text-gray-400">Transport:</strong> ${plan.mode || 'N/A'}</p>${plan.notes ? `<p class="text-sm mt-2 pt-2 border-t border-gray-600"><strong class="text-gray-400">Notes:</strong> ${plan.notes}</p>` : ''}`;
-                    travelPlansList.appendChild(div);
-                });
+                travelPlans = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                travelPlans.sort((a, b) => (b.updatedAt?.toDate() || 0) - (a.updatedAt?.toDate() || 0));
+                renderTravelPlans();
             });
         }
-        travelPlansList.addEventListener('click', (e) => {
-            if (e.target.classList.contains('delete-travel-plan')) {
-                showConfirmationModal('Delete Plan', 'Are you sure?', () => {
-                    deleteDoc(doc(db, TRAVEL_COLLECTION, e.target.dataset.id));
-                    travelForm.reset();
-                });
+
+        // --- RENDERING LOGIC ---
+        function getUserDisplayName(uid) {
+            return usernames[uid] || `User...${uid ? uid.substring(0,4) : '??'}`;
+        }
+
+        function renderPackingList() {
+            packingList.innerHTML = '';
+            if (packingItems.length === 0) {
+                packingList.innerHTML = `<li class="text-gray-500">Nothing packed yet.</li>`;
+                return;
             }
-        });
+            packingItems.forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'flex justify-between items-center bg-gray-700 p-2 rounded-lg';
+                li.innerHTML = `<span>${item.name}</span><div class="flex items-center gap-2"><span class="text-xs text-indigo-300">${getUserDisplayName(item.packedBy)}</span>${item.packedBy === userId ? `<button data-id="${item.id}" class="delete-packing-item btn btn-danger btn-sm !p-1 !text-xs">X</button>` : ''}</div>`;
+                packingList.appendChild(li);
+            });
+        }
+
+        function renderRequestList() {
+            requestList.innerHTML = '';
+            if (requestItems.length === 0) {
+                requestList.innerHTML = `<li class="text-gray-500">No requests yet.</li>`;
+                return;
+            }
+            requestItems.forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'flex justify-between items-center bg-gray-700 p-2 rounded-lg';
+                let content = `<span>${item.name} <em class="text-xs text-gray-400">(req. by ${getUserDisplayName(item.requestedBy)})</em></span>`;
+                if (item.status === 'fulfilled') {
+                    content += `<span class="text-sm text-green-400">Brought by ${getUserDisplayName(item.fulfilledBy)}</span>`;
+                } else {
+                    content += `<button data-id="${item.id}" class="fulfill-request-item btn btn-success btn-sm !py-1 !px-2">I'll bring it!</button>`;
+                }
+                li.innerHTML = content;
+                requestList.appendChild(li);
+            });
+        }
+
+        function renderTravelPlans() {
+            travelPlansList.innerHTML = '';
+            if (travelPlans.length === 0) {
+                travelPlansList.innerHTML = `<p class="text-gray-500">No travel plans saved yet.</p>`;
+                return;
+            }
+            travelPlans.forEach(plan => {
+                const div = document.createElement('div');
+                div.className = 'bg-gray-700 p-3 rounded-lg';
+                div.innerHTML = `<div class="flex justify-between items-start"><h4 class="font-bold text-lg text-indigo-300">${plan.name}</h4>${plan.userId === userId ? `<button data-id="${plan.id}" class="delete-travel-plan btn btn-danger btn-sm !p-1 !text-xs">X</button>` : ''}</div><p class="text-sm"><strong class="text-gray-400">Arrival:</strong> ${plan.arrival || 'N/A'}</p><p class="text-sm"><strong class="text-gray-400">Departure:</strong> ${plan.departure || 'N/A'}</p><p class="text-sm"><strong class="text-gray-400">Transport:</strong> ${plan.mode || 'N/A'}</p>${plan.notes ? `<p class="text-sm mt-2 pt-2 border-t border-gray-600"><strong class="text-gray-400">Notes:</strong> ${plan.notes}</p>` : ''}`;
+                travelPlansList.appendChild(div);
+            });
+        }
+
+        // --- EVENT HANDLERS ---
+        packingForm.addEventListener('submit', async (e) => { e.preventDefault(); const n = packingItemNameInput.value.trim(); if (n && userId) { await addDoc(collection(db, PACKING_COLLECTION), { name: n, packedBy: userId, createdAt: new Date() }); packingItemNameInput.value = ''; } });
+        requestForm.addEventListener('submit', async (e) => { e.preventDefault(); const n = requestItemNameInput.value.trim(); if (n && userId) { await addDoc(collection(db, REQUESTS_COLLECTION), { name: n, requestedBy: userId, status: 'requested', fulfilledBy: null, createdAt: new Date() }); requestItemNameInput.value = ''; } });
+        travelForm.addEventListener('submit', async (e) => { e.preventDefault(); if (username && userId) { await setDoc(doc(db, TRAVEL_COLLECTION, userId), { name: username, arrival: travelArrivalInput.value.trim(), departure: travelDepartureInput.value.trim(), mode: travelModeInput.value.trim(), notes: travelNotesInput.value.trim(), updatedAt: new Date(), userId: userId }); } });
+
+        packingList.addEventListener('click', (e) => { if (e.target.classList.contains('delete-packing-item')) { showConfirmationModal('Delete Item', 'Are you sure?', () => deleteDoc(doc(db, PACKING_COLLECTION, e.target.dataset.id))); } });
+        requestList.addEventListener('click', (e) => { if (e.target.classList.contains('fulfill-request-item')) { updateDoc(doc(db, REQUESTS_COLLECTION, e.target.dataset.id), { status: 'fulfilled', fulfilledBy: userId }); } });
+        travelPlansList.addEventListener('click', (e) => { if (e.target.classList.contains('delete-travel-plan')) { showConfirmationModal('Delete Plan', 'Are you sure?', () => { deleteDoc(doc(db, TRAVEL_COLLECTION, e.target.dataset.id)); travelForm.reset(); }); } });
+
+        showQrBtn.addEventListener('click', () => { new QRious({ element: document.getElementById('qrCanvas'), value: window.location.href, size: 256, padding: 16 }); qrModal.classList.remove('hidden'); });
+        closeQrBtn.addEventListener('click', () => qrModal.classList.add('hidden'));
 
     </script>
 </body>
