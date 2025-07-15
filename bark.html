@@ -49,13 +49,6 @@
         .btn-secondary:hover {
             background-color: #4b5563; /* hover:bg-gray-600 */
         }
-        .btn-success {
-            background-color: #16a34a; /* bg-green-600 */
-            color: white;
-        }
-        .btn-success:hover {
-            background-color: #15803d; /* hover:bg-green-700 */
-        }
         .btn-danger {
             background-color: #dc2626; /* bg-red-600 */
             color: white;
@@ -104,7 +97,7 @@
             <p class="text-gray-400 mt-2">A shared space to coordinate packing and travel.</p>
             <div class="mt-4 flex justify-center items-center gap-4">
                  <div class="text-xs text-gray-500 bg-gray-800 p-2 rounded-lg inline-flex items-center gap-2">
-                    Logged in as: <span id="usernameDisplay" class="font-mono text-indigo-400 cursor-pointer" title="My Account & Syncing">Loading...</span>
+                    Logged in as: <span id="usernameDisplay" class="font-mono text-indigo-400 cursor-pointer" title="My Account">Loading...</span>
                     <button id="signOutBtn" class="btn btn-danger !p-1 !text-xs" title="Sign Out">
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
                     </button>
@@ -124,24 +117,23 @@
     <div id="loginModal" class="modal-backdrop">
         <div class="card w-full max-w-sm">
             <h3 class="text-xl font-bold mb-4 text-center">Welcome to the Planner!</h3>
-            <p class="text-gray-300 mb-6 text-center text-sm">Sign in to sync your lists across devices.</p>
-            <div class="space-y-3">
-                <button id="anonymousSignInBtn" class="btn btn-secondary w-full">Continue Anonymously</button>
-                <button id="useSyncCodeBtn" class="btn btn-primary w-full">Use a Sync Code</button>
-            </div>
-            <p id="loginError" class="text-red-400 text-sm mt-4 text-center hidden"></p>
+            <p class="text-gray-300 mb-6 text-center text-sm">Sign in with your phone number to get started.</p>
+            <form id="phoneSignInForm">
+                <input type="tel" id="phoneNumberInput" class="form-input" placeholder="+1 555-555-5555" required>
+                <p id="phoneError" class="text-red-400 text-sm mt-2 hidden"></p>
+                <button type="submit" id="sendCodeBtn" class="btn btn-primary w-full mt-4">Send Verification Code</button>
+            </form>
         </div>
     </div>
-    <div id="syncCodeInputModal" class="modal-backdrop hidden">
+    <div id="verifyCodeModal" class="modal-backdrop hidden">
         <div class="card w-full max-w-sm">
-            <h3 class="text-xl font-bold mb-4">Enter Sync Code</h3>
-            <p class="text-gray-300 mb-4 text-sm">Enter the 6-digit code from your other device to sync your data.</p>
-            <form id="syncCodeForm">
-                <input type="text" id="syncCodeInput" class="form-input text-center tracking-[1em]" placeholder="_ _ _ _ _ _" maxlength="6" required>
-                <p id="syncCodeError" class="text-red-400 text-sm mt-2 hidden"></p>
-                <button type="submit" class="btn btn-primary w-full mt-4">Sync Device</button>
+            <h3 class="text-xl font-bold mb-4">Enter Verification Code</h3>
+            <p class="text-gray-300 mb-4 text-sm">Enter the 6-digit code we sent to your phone.</p>
+            <form id="verifyCodeForm">
+                <input type="text" id="verifyCodeInput" class="form-input text-center tracking-[1em]" placeholder="_ _ _ _ _ _" maxlength="6" required>
+                <p id="verifyCodeError" class="text-red-400 text-sm mt-2 hidden"></p>
+                <button type="submit" class="btn btn-primary w-full mt-4">Verify & Sign In</button>
             </form>
-             <button id="cancelSyncBtn" class="btn btn-secondary w-full mt-2">Cancel</button>
         </div>
     </div>
     <div id="accountModal" class="modal-backdrop hidden">
@@ -155,45 +147,12 @@
                 </div>
                 <p id="usernameError" class="text-red-400 text-sm mt-2 hidden"></p>
             </form>
-
-            <div class="border-t border-gray-700 pt-6">
-                <h4 class="text-lg font-bold mb-2">Sync & Backup</h4>
-                <p class="text-sm text-gray-400 mb-4">Use a temporary code to link a new device, or save your permanent ID as a backup.</p>
-                
-                <button id="generateSyncCodeBtn" class="btn btn-secondary w-full">Generate 5-Minute Sync Code</button>
-
-                <div id="syncCodeSection" class="mt-4 text-center hidden">
-                    <div id="syncCodeDisplay" class="text-4xl font-bold tracking-[0.2em] bg-gray-900 p-4 rounded-lg">------</div>
-                    <p id="syncCodeTimer" class="text-yellow-400 text-sm mt-2"></p>
-                </div>
-
-                <div class="mt-6">
-                    <label class="block text-sm font-medium text-gray-300 mb-1">Permanent User ID (Backup)</label>
-                    <div class="flex gap-2">
-                        <input type="text" id="permanentIdDisplay" class="form-input bg-gray-900 text-gray-400 flex-grow" readonly>
-                        <button id="copyUserIdBtn" class="btn btn-secondary">Copy</button>
-                    </div>
-                </div>
-            </div>
             <button id="closeAccountModalBtn" class="btn btn-secondary w-full mt-8">Close</button>
         </div>
     </div>
     <div id="initErrorModal" class="modal-backdrop hidden"><div class="card w-full max-w-md"><h3 class="text-xl font-bold mb-4 text-red-400">Application Error</h3><p class="text-gray-300 mb-4">Could not initialize the application. Please check your Firebase credentials in the HTML file.</p></div></div>
-    <div id="authErrorModal" class="modal-backdrop hidden"><div class="card w-full max-w-md"><h3 class="text-xl font-bold mb-4 text-yellow-400">Action Required: Enable Sign-In Method</h3><p class="text-gray-300 mb-4">The application failed to sign you in. Please enable Anonymous sign-in in your Firebase project.</p><div class="text-left text-sm bg-gray-900 p-4 rounded-lg"><p class="font-bold text-gray-200">How to fix:</p><ol class="list-decimal list-inside mt-2 space-y-1 text-gray-300"><li>Go to the <a href="https://console.firebase.google.com/" target="_blank" class="text-indigo-400 underline">Firebase Console</a>.</li><li>Select your project: <strong>barkplanner</strong>.</li><li>In the left menu, go to <strong>Authentication</strong>.</li><li>Click the <strong>Sign-in method</strong> tab.</li><li>Find <strong>Anonymous</strong> and enable it.</li><li>Reload this page.</li></ol></div></div></div>
-    <div id="firestoreErrorModal" class="modal-backdrop hidden">
-        <div class="card w-full max-w-lg">
-            <h3 class="text-xl font-bold mb-4 text-yellow-400">Action Required: Update Firestore Rules</h3>
-            <p class="text-gray-300 mb-4">The application connected to the database but failed to read or write data. This is usually because of restrictive security rules in your Firebase project.</p>
-            <div class="text-left text-sm bg-gray-900 p-4 rounded-lg">
-                <p class="font-bold text-gray-200">How to fix:</p>
-                <ol class="list-decimal list-inside mt-2 space-y-1 text-gray-300">
-                    <li>Go to the <a href="https://console.firebase.google.com/" target="_blank" class="text-indigo-400 underline">Firebase Console</a>.</li>
-                    <li>Select your project: <strong>barkplanner</strong>.</li>
-                    <li>In the left menu, go to <strong>Firestore Database</strong>.</li>
-                    <li>Click the <strong>Rules</strong> tab.</li>
-                    <li>Replace the existing rules with the following to allow logged-in users to access the data:</li>
-                </ol>
-                <pre class="bg-gray-800 text-gray-200 p-2 mt-2 rounded-md text-xs overflow-x-auto"><code>rules_version = '2';
+    <div id="authErrorModal" class="modal-backdrop hidden"><div class="card w-full max-w-md"><h3 class="text-xl font-bold mb-4 text-yellow-400">Action Required: Enable Phone Sign-In</h3><p class="text-gray-300 mb-4">The application failed to sign you in. Please enable Phone Number sign-in in your Firebase project and configure reCAPTCHA.</p><div class="text-left text-sm bg-gray-900 p-4 rounded-lg"><p class="font-bold text-gray-200">How to fix:</p><ol class="list-decimal list-inside mt-2 space-y-1 text-gray-300"><li>Go to the <a href="https://console.firebase.google.com/" target="_blank" class="text-indigo-400 underline">Firebase Console</a>.</li><li>Select your project: <strong>barkplanner</strong>.</li><li>In the left menu, go to <strong>Authentication</strong>.</li><li>Click the <strong>Sign-in method</strong> tab.</li><li>Find <strong>Phone</strong> and enable it.</li><li>Under Authentication -> Settings, add your website's domain to the <strong>Authorized domains</strong> list.</li><li>Reload this page.</li></ol></div></div></div>
+    <div id="firestoreErrorModal" class="modal-backdrop hidden"><div class="card w-full max-w-lg"><h3 class="text-xl font-bold mb-4 text-yellow-400">Action Required: Update Firestore Rules</h3><p class="text-gray-300 mb-4">The application connected to the database but failed to read or write data. This is usually because of restrictive security rules in your Firebase project.</p><div class="text-left text-sm bg-gray-900 p-4 rounded-lg"><p class="font-bold text-gray-200">How to fix:</p><ol class="list-decimal list-inside mt-2 space-y-1 text-gray-300"><li>Go to the <a href="https://console.firebase.google.com/" target="_blank" class="text-indigo-400 underline">Firebase Console</a>.</li><li>Select your project: <strong>barkplanner</strong>.</li><li>In the left menu, go to <strong>Firestore Database</strong>.</li><li>Click the <strong>Rules</strong> tab.</li><li>Replace the existing rules with the following to allow logged-in users to access the data:</li></ol><pre class="bg-gray-800 text-gray-200 p-2 mt-2 rounded-md text-xs overflow-x-auto"><code>rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /item_requests/{docId} {
@@ -210,22 +169,15 @@ service cloud.firestore {
         allow read, write: if request.auth.uid == userId;
       }
     }
-    match /sync_codes/{code} {
-        allow read, write: if request.auth != null;
-    }
   }
-}</code></pre>
-                <p class="mt-2 text-gray-400">After updating the rules, reload this page.</p>
-            </div>
-        </div>
-    </div>
+}</code></pre><p class="mt-2 text-gray-400">After updating the rules, reload this page.</p></div></div></div>
     <div id="confirmationModal" class="modal-backdrop hidden"><div class="card w-full max-w-sm"><h3 class="text-xl font-bold mb-4" id="modalTitle"></h3><p class="text-gray-300 mb-6" id="modalMessage"></p><div class="flex justify-end gap-4"><button id="modalCancel" class="btn btn-secondary">Cancel</button><button id="modalConfirm" class="btn btn-danger">Confirm</button></div></div></div>
     <div id="qrModal" class="modal-backdrop hidden"><div class="card w-full max-w-sm text-center"><h3 class="text-xl font-bold mb-4">Scan to Join!</h3><canvas id="qrCanvas"></canvas><p class="text-gray-400 mt-4 text-sm">Scan this code with another device to join this planner.</p><button id="closeQrBtn" class="btn btn-secondary w-full mt-4">Close</button></div></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, addDoc, setDoc, getDoc, deleteDoc, onSnapshot, query, updateDoc, writeBatch, Timestamp, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, RecaptchaVerifier, signInWithPhoneNumber, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, addDoc, setDoc, getDoc, deleteDoc, onSnapshot, query, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
           apiKey: "AIzaSyDAHz4WlysnKsO3oZaZeI0LXHtHAs5stC0",
@@ -246,7 +198,6 @@ service cloud.firestore {
         const USERS_COLLECTION = 'users';
         const REQUESTS_COLLECTION = 'item_requests';
         const TRAVEL_COLLECTION = 'travel_plans';
-        const SYNC_CODES_COLLECTION = 'sync_codes';
 
         try {
             app = initializeApp(firebaseConfig);
@@ -259,7 +210,6 @@ service cloud.firestore {
 
         const appContainer = document.getElementById('app');
         const loginModal = document.getElementById('loginModal');
-        const loginError = document.getElementById('loginError');
         const usernameDisplay = document.getElementById('usernameDisplay');
         const packingForm = document.getElementById('add-packing-item-form');
         const packingItemNameInput = document.getElementById('packing-item-name');
@@ -280,20 +230,27 @@ service cloud.firestore {
         const qrModal = document.getElementById('qrModal');
         const showQrBtn = document.getElementById('showQrBtn');
         const closeQrBtn = document.getElementById('closeQrBtn');
-        const anonymousSignInBtn = document.getElementById('anonymousSignInBtn');
         const signOutBtn = document.getElementById('signOutBtn');
-        const useSyncCodeBtn = document.getElementById('useSyncCodeBtn');
-        const syncCodeInputModal = document.getElementById('syncCodeInputModal');
-        const syncCodeForm = document.getElementById('syncCodeForm');
-        const syncCodeInput = document.getElementById('syncCodeInput');
-        const syncCodeError = document.getElementById('syncCodeError');
-        const cancelSyncBtn = document.getElementById('cancelSyncBtn');
-        const generateSyncCodeBtn = document.getElementById('generateSyncCodeBtn');
-        const syncCodeSection = document.getElementById('syncCodeSection');
-        const syncCodeDisplay = document.getElementById('syncCodeDisplay');
-        const syncCodeTimer = document.getElementById('syncCodeTimer');
-        const permanentIdDisplay = document.getElementById('permanentIdDisplay');
-        const copyUserIdBtn = document.getElementById('copyUserIdBtn');
+        const phoneSignInForm = document.getElementById('phoneSignInForm');
+        const phoneNumberInput = document.getElementById('phoneNumberInput');
+        const phoneError = document.getElementById('phoneError');
+        const sendCodeBtn = document.getElementById('sendCodeBtn');
+        const verifyCodeModal = document.getElementById('verifyCodeModal');
+        const verifyCodeForm = document.getElementById('verifyCodeForm');
+        const verifyCodeInput = document.getElementById('verifyCodeInput');
+        const verifyCodeError = document.getElementById('verifyCodeError');
+
+
+        function setupRecaptchaVerifier() {
+            if (!window.recaptchaVerifier) {
+                window.recaptchaVerifier = new RecaptchaVerifier(auth, 'sendCodeBtn', {
+                    'size': 'invisible',
+                    'callback': (response) => {
+                        // reCAPTCHA solved, allow signInWithPhoneNumber.
+                    }
+                });
+            }
+        }
 
         if (auth) {
             onAuthStateChanged(auth, async (user) => {
@@ -304,15 +261,12 @@ service cloud.firestore {
                         await checkUsername(user);
                         loadAllData();
                         loginModal.classList.add('hidden');
+                        verifyCodeModal.classList.add('hidden');
                         appContainer.classList.remove('hidden');
                     } catch (e) {
                         console.error("Error during post-login setup:", e);
                         if (e.code && (e.code.includes('permission-denied') || e.code.includes('unauthenticated'))) {
                             document.getElementById('firestoreErrorModal').classList.remove('hidden');
-                        } else {
-                            loginModal.classList.remove('hidden');
-                            loginError.textContent = 'An unexpected error occurred. Please try again.';
-                            loginError.classList.remove('hidden');
                         }
                         await signOut(auth);
                     }
@@ -332,7 +286,7 @@ service cloud.firestore {
                 username = userDoc.data().username;
                 usernameDisplay.textContent = username;
             } else {
-                const newUsername = user.isAnonymous ? 'Guest' : (user.displayName || 'Guest');
+                const newUsername = user.phoneNumber || 'Guest';
                 if (newUsername !== 'Guest') {
                     await setDoc(userDocRef, { username: newUsername }, { merge: true });
                     username = newUsername;
@@ -399,106 +353,54 @@ service cloud.firestore {
         }
 
         // --- Event Handlers ---
-        anonymousSignInBtn.addEventListener('click', async () => { 
-            loginError.classList.add('hidden');
-            anonymousSignInBtn.disabled = true;
-            anonymousSignInBtn.textContent = 'Signing in...';
-            try { 
-                await signInAnonymously(auth); 
-            } catch (e) { 
-                console.error(e); 
-                if (e.code === 'auth/configuration-not-found') {
-                    document.getElementById('authErrorModal').classList.remove('hidden'); 
-                } else {
-                    loginError.textContent = 'Sign in failed. Please try again.';
-                    loginError.classList.remove('hidden');
-                }
-            } finally {
-                anonymousSignInBtn.disabled = false;
-                anonymousSignInBtn.textContent = 'Continue Anonymously';
-            }
-        });
         signOutBtn.addEventListener('click', () => signOut(auth));
-        useSyncCodeBtn.addEventListener('click', () => syncCodeInputModal.classList.remove('hidden'));
-        cancelSyncBtn.addEventListener('click', () => syncCodeInputModal.classList.add('hidden'));
-        closeAccountModalBtn.addEventListener('click', () => accountModal.classList.add('hidden'));
         
-        let syncInterval;
-        generateSyncCodeBtn.addEventListener('click', async () => {
-            const code = Math.random().toString().substring(2, 8).toUpperCase();
-            const expiresAt = Timestamp.fromMillis(Date.now() + 5 * 60 * 1000);
-            await setDoc(doc(db, SYNC_CODES_COLLECTION, code), { userId, expiresAt });
-            
-            syncCodeDisplay.textContent = code;
-            syncCodeSection.classList.remove('hidden');
-
-            const updateTimer = () => {
-                const secondsLeft = Math.round((expiresAt.toMillis() - Date.now()) / 1000);
-                if (secondsLeft <= 0) {
-                    syncCodeTimer.textContent = 'Code expired.';
-                    clearInterval(syncInterval);
-                } else {
-                    syncCodeTimer.textContent = `Expires in ${Math.floor(secondsLeft / 60)}m ${secondsLeft % 60}s`;
-                }
-            };
-            updateTimer();
-            syncInterval = setInterval(updateTimer, 1000);
-        });
-
-        syncCodeForm.addEventListener('submit', async (e) => {
+        phoneSignInForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const code = syncCodeInput.value.trim().toUpperCase();
-            if (code.length !== 6) return;
-            
-            syncCodeError.classList.add('hidden');
-            const syncButton = e.target.querySelector('button');
-            syncButton.disabled = true;
-            syncButton.textContent = 'Verifying...';
+            setupRecaptchaVerifier();
+            const phoneNumber = phoneNumberInput.value;
+            const appVerifier = window.recaptchaVerifier;
+            phoneError.classList.add('hidden');
+            sendCodeBtn.disabled = true;
 
             try {
-                const codeRef = doc(db, SYNC_CODES_COLLECTION, code);
-                const codeDoc = await getDoc(codeRef);
-
-                if (!codeDoc.exists() || codeDoc.data().expiresAt.toMillis() < Date.now()) {
-                    throw new Error('Invalid or expired code.');
-                }
-                
-                syncButton.textContent = 'Signing in...';
-                // We need to sign out the current temp user before signing in with the new one.
-                if (auth.currentUser) {
-                    await signOut(auth);
-                }
-                const sourceUserId = codeDoc.data().userId;
-                // This part is tricky. We can't "log in" as another user.
-                // We need to copy the data. Let's sign in a new user and copy.
-                const userCredential = await signInAnonymously(auth);
-                const newUserId = userCredential.user.uid;
-
-                syncButton.textContent = 'Syncing data...';
-                const batch = writeBatch(db);
-
-                const sourceUserDoc = await getDoc(doc(db, USERS_COLLECTION, sourceUserId));
-                if (sourceUserDoc.exists()) batch.set(doc(db, USERS_COLLECTION, newUserId), sourceUserDoc.data());
-
-                const sourceTravelPlan = await getDoc(doc(db, TRAVEL_COLLECTION, sourceUserId));
-                if(sourceTravelPlan.exists()) batch.set(doc(db, TRAVEL_COLLECTION, newUserId), sourceTravelPlan.data());
-
-                const sourcePackingItems = await getDocs(collection(db, USERS_COLLECTION, sourceUserId, 'packing_items'));
-                sourcePackingItems.forEach(itemDoc => batch.set(doc(db, USERS_COLLECTION, newUserId, 'packing_items', itemDoc.id), itemDoc.data()));
-
-                batch.delete(codeRef);
-                await batch.commit();
-
-                syncCodeInputModal.classList.add('hidden');
-                syncCodeInput.value = '';
-
+                const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
+                window.confirmationResult = confirmationResult;
+                loginModal.classList.add('hidden');
+                verifyCodeModal.classList.remove('hidden');
             } catch (error) {
-                console.error("Sync failed:", error);
-                syncCodeError.textContent = error.message || 'Data sync failed. Please try again.';
-                syncCodeError.classList.remove('hidden');
+                console.error("SMS not sent:", error);
+                phoneError.textContent = "Failed to send code. Check number or reCAPTCHA config.";
+                phoneError.classList.remove('hidden');
+                if (error.code === 'auth/missing-phone-number' || error.code === 'auth/invalid-phone-number') {
+                    phoneError.textContent = "Please enter a valid phone number.";
+                } else if (error.code === 'auth/too-many-requests') {
+                    phoneError.textContent = "Too many requests. Please try again later.";
+                } else {
+                     document.getElementById('authErrorModal').classList.remove('hidden');
+                }
+                grecaptcha.reset(window.recaptchaWidgetId);
             } finally {
-                syncButton.disabled = false;
-                syncButton.textContent = 'Sync Device';
+                sendCodeBtn.disabled = false;
+            }
+        });
+
+        verifyCodeForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const code = verifyCodeInput.value;
+            verifyCodeError.classList.add('hidden');
+            const verifyBtn = e.target.querySelector('button');
+            verifyBtn.disabled = true;
+
+            try {
+                await window.confirmationResult.confirm(code);
+                // onAuthStateChanged will handle the rest
+            } catch (error) {
+                console.error("Code verification failed:", error);
+                verifyCodeError.textContent = "Invalid code. Please try again.";
+                verifyCodeError.classList.remove('hidden');
+            } finally {
+                verifyBtn.disabled = false;
             }
         });
 
@@ -531,19 +433,13 @@ service cloud.firestore {
         
         usernameDisplay.addEventListener('click', () => { 
             usernameInput.value = username || ''; 
-            permanentIdDisplay.value = userId || '';
-            syncCodeSection.classList.add('hidden');
             accountModal.classList.remove('hidden'); 
-        });
-
-        copyUserIdBtn.addEventListener('click', () => {
-            permanentIdDisplay.select();
-            document.execCommand('copy');
         });
 
         showQrBtn.addEventListener('click', () => { new QRious({ element: document.getElementById('qrCanvas'), value: window.location.href, size: 256, padding: 16 }); qrModal.classList.remove('hidden'); });
         closeQrBtn.addEventListener('click', () => qrModal.classList.add('hidden'));
         modalCancelBtn.addEventListener('click', () => confirmationModal.classList.add('hidden'));
+        closeAccountModalBtn.addEventListener('click', () => accountModal.classList.add('hidden'));
         function showConfirmationModal(title, message, onConfirm) { confirmationModal.querySelector('#modalTitle').textContent = title; confirmationModal.querySelector('#modalMessage').textContent = message; confirmCallback = onConfirm; confirmationModal.classList.remove('hidden'); }
         let confirmCallback;
         modalConfirmBtn.addEventListener('click', () => { if (confirmCallback) confirmCallback(); confirmationModal.classList.add('hidden'); });
