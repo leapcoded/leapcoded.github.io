@@ -116,24 +116,19 @@
     <!-- Modals -->
     <div id="loginModal" class="modal-backdrop">
         <div class="card w-full max-w-sm">
-            <h3 class="text-xl font-bold mb-4 text-center">Welcome to the Planner!</h3>
-            <p class="text-gray-300 mb-6 text-center text-sm">Sign in with your phone number to get started.</p>
-            <form id="phoneSignInForm">
-                <input type="tel" id="phoneNumberInput" class="form-input" placeholder="+1 555-555-5555" required>
-                <p id="phoneError" class="text-red-400 text-sm mt-2 hidden"></p>
-                <button type="submit" id="sendCodeBtn" class="btn btn-primary w-full mt-4">Send Verification Code</button>
-            </form>
-        </div>
-    </div>
-    <div id="verifyCodeModal" class="modal-backdrop hidden">
-        <div class="card w-full max-w-sm">
-            <h3 class="text-xl font-bold mb-4">Enter Verification Code</h3>
-            <p class="text-gray-300 mb-4 text-sm">Enter the 6-digit code we sent to your phone.</p>
-            <form id="verifyCodeForm">
-                <input type="text" id="verifyCodeInput" class="form-input text-center tracking-[1em]" placeholder="_ _ _ _ _ _" maxlength="6" required>
-                <p id="verifyCodeError" class="text-red-400 text-sm mt-2 hidden"></p>
-                <button type="submit" class="btn btn-primary w-full mt-4">Verify & Sign In</button>
-            </form>
+            <div id="emailFormContainer">
+                <h3 class="text-xl font-bold mb-4 text-center">Sign In / Register</h3>
+                <p class="text-gray-300 mb-6 text-center text-sm">Enter your email to receive a secure login link.</p>
+                <form id="emailForm">
+                    <input type="email" id="emailInput" class="form-input" placeholder="Email address" required>
+                    <p id="emailError" class="text-red-400 text-sm mt-2 hidden"></p>
+                    <button type="submit" id="sendLinkBtn" class="btn btn-primary w-full mt-4">Send Login Link</button>
+                </form>
+            </div>
+            <div id="emailSentContainer" class="hidden text-center">
+                <h3 class="text-xl font-bold mb-4">Check Your Email</h3>
+                <p class="text-gray-300">A login link has been sent to <strong id="sentToEmail"></strong>. Click the link to sign in.</p>
+            </div>
         </div>
     </div>
     <div id="accountModal" class="modal-backdrop hidden">
@@ -151,7 +146,7 @@
         </div>
     </div>
     <div id="initErrorModal" class="modal-backdrop hidden"><div class="card w-full max-w-md"><h3 class="text-xl font-bold mb-4 text-red-400">Application Error</h3><p class="text-gray-300 mb-4">Could not initialize the application. Please check your Firebase credentials in the HTML file.</p></div></div>
-    <div id="authErrorModal" class="modal-backdrop hidden"><div class="card w-full max-w-md"><h3 class="text-xl font-bold mb-4 text-yellow-400">Action Required: Enable Phone Sign-In</h3><p class="text-gray-300 mb-4">The application failed to sign you in. Please enable Phone Number sign-in in your Firebase project and configure reCAPTCHA.</p><div class="text-left text-sm bg-gray-900 p-4 rounded-lg"><p class="font-bold text-gray-200">How to fix:</p><ol class="list-decimal list-inside mt-2 space-y-1 text-gray-300"><li>Go to the <a href="https://console.firebase.google.com/" target="_blank" class="text-indigo-400 underline">Firebase Console</a>.</li><li>Select your project: <strong>barkplanner</strong>.</li><li>In the left menu, go to <strong>Authentication</strong>.</li><li>Click the <strong>Sign-in method</strong> tab.</li><li>Find <strong>Phone</strong> and enable it.</li><li>Under Authentication -> Settings, add your website's domain to the <strong>Authorized domains</strong> list.</li><li>Reload this page.</li></ol></div></div></div>
+    <div id="authErrorModal" class="modal-backdrop hidden"><div class="card w-full max-w-md"><h3 class="text-xl font-bold mb-4 text-yellow-400">Action Required: Enable Email/Password Sign-In</h3><p class="text-gray-300 mb-4">The application failed to sign you in. Please enable Email/Password sign-in in your Firebase project for this login method to work.</p><div class="text-left text-sm bg-gray-900 p-4 rounded-lg"><p class="font-bold text-gray-200">How to fix:</p><ol class="list-decimal list-inside mt-2 space-y-1 text-gray-300"><li>Go to the <a href="https://console.firebase.google.com/" target="_blank" class="text-indigo-400 underline">Firebase Console</a>.</li><li>Select your project: <strong>barkplanner</strong>.</li><li>In the left menu, go to <strong>Authentication</strong>.</li><li>Click the <strong>Sign-in method</strong> tab.</li><li>Find <strong>Email/Password</strong> and enable it.</li><li>Reload this page.</li></ol></div></div></div>
     <div id="firestoreErrorModal" class="modal-backdrop hidden"><div class="card w-full max-w-lg"><h3 class="text-xl font-bold mb-4 text-yellow-400">Action Required: Update Firestore Rules</h3><p class="text-gray-300 mb-4">The application connected to the database but failed to read or write data. This is usually because of restrictive security rules in your Firebase project.</p><div class="text-left text-sm bg-gray-900 p-4 rounded-lg"><p class="font-bold text-gray-200">How to fix:</p><ol class="list-decimal list-inside mt-2 space-y-1 text-gray-300"><li>Go to the <a href="https://console.firebase.google.com/" target="_blank" class="text-indigo-400 underline">Firebase Console</a>.</li><li>Select your project: <strong>barkplanner</strong>.</li><li>In the left menu, go to <strong>Firestore Database</strong>.</li><li>Click the <strong>Rules</strong> tab.</li><li>Replace the existing rules with the following to allow logged-in users to access the data:</li></ol><pre class="bg-gray-800 text-gray-200 p-2 mt-2 rounded-md text-xs overflow-x-auto"><code>rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -176,7 +171,7 @@ service cloud.firestore {
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, RecaptchaVerifier, signInWithPhoneNumber, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, isSignInWithEmailLink, sendSignInLinkToEmail, signInWithEmailLink, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, addDoc, setDoc, getDoc, deleteDoc, onSnapshot, query, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -231,28 +226,41 @@ service cloud.firestore {
         const showQrBtn = document.getElementById('showQrBtn');
         const closeQrBtn = document.getElementById('closeQrBtn');
         const signOutBtn = document.getElementById('signOutBtn');
-        const phoneSignInForm = document.getElementById('phoneSignInForm');
-        const phoneNumberInput = document.getElementById('phoneNumberInput');
-        const phoneError = document.getElementById('phoneError');
-        const sendCodeBtn = document.getElementById('sendCodeBtn');
-        const verifyCodeModal = document.getElementById('verifyCodeModal');
-        const verifyCodeForm = document.getElementById('verifyCodeForm');
-        const verifyCodeInput = document.getElementById('verifyCodeInput');
-        const verifyCodeError = document.getElementById('verifyCodeError');
+        const emailForm = document.getElementById('emailForm');
+        const emailInput = document.getElementById('emailInput');
+        const emailError = document.getElementById('emailError');
+        const sendLinkBtn = document.getElementById('sendLinkBtn');
+        const emailFormContainer = document.getElementById('emailFormContainer');
+        const emailSentContainer = document.getElementById('emailSentContainer');
+        const sentToEmail = document.getElementById('sentToEmail');
 
+        const actionCodeSettings = {
+            url: window.location.href,
+            handleCodeInApp: true,
+        };
 
-        function setupRecaptchaVerifier() {
-            if (!window.recaptchaVerifier) {
-                window.recaptchaVerifier = new RecaptchaVerifier(auth, 'sendCodeBtn', {
-                    'size': 'invisible',
-                    'callback': (response) => {
-                        // reCAPTCHA solved, allow signInWithPhoneNumber.
+        async function handleEmailLinkSignIn() {
+            if (isSignInWithEmailLink(auth, window.location.href)) {
+                let email = window.localStorage.getItem('emailForSignIn');
+                if (!email) {
+                    email = window.prompt('Please provide your email for confirmation');
+                }
+                try {
+                    await signInWithEmailLink(auth, email, window.location.href);
+                    window.localStorage.removeItem('emailForSignIn');
+                    // Clean the URL
+                    if (window.history && window.history.replaceState) {
+                        window.history.replaceState({}, document.title, window.location.pathname);
                     }
-                });
+                } catch (error) {
+                    console.error("Email link sign in failed:", error);
+                    // Handle error
+                }
             }
         }
 
         if (auth) {
+            handleEmailLinkSignIn();
             onAuthStateChanged(auth, async (user) => {
                 if (user) {
                     try {
@@ -261,7 +269,6 @@ service cloud.firestore {
                         await checkUsername(user);
                         loadAllData();
                         loginModal.classList.add('hidden');
-                        verifyCodeModal.classList.add('hidden');
                         appContainer.classList.remove('hidden');
                     } catch (e) {
                         console.error("Error during post-login setup:", e);
@@ -286,7 +293,7 @@ service cloud.firestore {
                 username = userDoc.data().username;
                 usernameDisplay.textContent = username;
             } else {
-                const newUsername = user.phoneNumber || 'Guest';
+                const newUsername = user.displayName || 'Guest';
                 if (newUsername !== 'Guest') {
                     await setDoc(userDocRef, { username: newUsername }, { merge: true });
                     username = newUsername;
@@ -355,52 +362,26 @@ service cloud.firestore {
         // --- Event Handlers ---
         signOutBtn.addEventListener('click', () => signOut(auth));
         
-        phoneSignInForm.addEventListener('submit', async (e) => {
+        emailForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            setupRecaptchaVerifier();
-            const phoneNumber = phoneNumberInput.value;
-            const appVerifier = window.recaptchaVerifier;
-            phoneError.classList.add('hidden');
-            sendCodeBtn.disabled = true;
-
+            const email = emailInput.value;
+            emailError.classList.add('hidden');
+            sendLinkBtn.disabled = true;
             try {
-                const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
-                window.confirmationResult = confirmationResult;
-                loginModal.classList.add('hidden');
-                verifyCodeModal.classList.remove('hidden');
+                await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+                window.localStorage.setItem('emailForSignIn', email);
+                sentToEmail.textContent = email;
+                emailFormContainer.classList.add('hidden');
+                emailSentContainer.classList.remove('hidden');
             } catch (error) {
-                console.error("SMS not sent:", error);
-                phoneError.textContent = "Failed to send code. Check number or reCAPTCHA config.";
-                phoneError.classList.remove('hidden');
-                if (error.code === 'auth/missing-phone-number' || error.code === 'auth/invalid-phone-number') {
-                    phoneError.textContent = "Please enter a valid phone number.";
-                } else if (error.code === 'auth/too-many-requests') {
-                    phoneError.textContent = "Too many requests. Please try again later.";
-                } else {
-                     document.getElementById('authErrorModal').classList.remove('hidden');
+                console.error("Failed to send link:", error);
+                emailError.textContent = "Failed to send link. Please check the email address.";
+                if (error.code === 'auth/operation-not-allowed') {
+                    document.getElementById('authErrorModal').classList.remove('hidden');
                 }
-                grecaptcha.reset(window.recaptchaWidgetId);
+                emailError.classList.remove('hidden');
             } finally {
-                sendCodeBtn.disabled = false;
-            }
-        });
-
-        verifyCodeForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const code = verifyCodeInput.value;
-            verifyCodeError.classList.add('hidden');
-            const verifyBtn = e.target.querySelector('button');
-            verifyBtn.disabled = true;
-
-            try {
-                await window.confirmationResult.confirm(code);
-                // onAuthStateChanged will handle the rest
-            } catch (error) {
-                console.error("Code verification failed:", error);
-                verifyCodeError.textContent = "Invalid code. Please try again.";
-                verifyCodeError.classList.remove('hidden');
-            } finally {
-                verifyBtn.disabled = false;
+                sendLinkBtn.disabled = false;
             }
         });
 
