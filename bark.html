@@ -20,7 +20,10 @@
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
         .btn {
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
             padding: 0.5rem 1rem;
             border-radius: 0.5rem;
             font-weight: 600;
@@ -91,13 +94,16 @@
 </head>
 <body class="antialiased">
 
-    <div id="app" class="container mx-auto p-4 md:p-8">
+    <div id="app" class="container mx-auto p-4 md:p-8 hidden">
         <header class="text-center mb-8">
             <h1 class="text-4xl md:text-5xl font-bold text-white">Barktargent 2026 Planner</h1>
             <p class="text-gray-400 mt-2">A shared space to coordinate packing and travel.</p>
             <div class="mt-4 flex justify-center items-center gap-4">
-                 <div class="text-xs text-gray-500 bg-gray-800 p-2 rounded-lg inline-block">
+                 <div class="text-xs text-gray-500 bg-gray-800 p-2 rounded-lg inline-flex items-center gap-2">
                     Logged in as: <span id="usernameDisplay" class="font-mono text-indigo-400 cursor-pointer" title="Click to change username">Loading...</span>
+                    <button id="signOutBtn" class="btn btn-danger !p-1 !text-xs" title="Sign Out">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                    </button>
                 </div>
                 <button id="showQrBtn" class="btn btn-secondary btn-sm !py-1 !px-2">Share via QR</button>
             </div>
@@ -106,9 +112,9 @@
         <main class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             
             <section id="packing-list-section" class="card">
-                <h2 class="text-2xl font-bold mb-4 text-white">Group Packing List</h2>
+                <h2 class="text-2xl font-bold mb-4 text-white">My Packing List</h2>
                 <form id="add-packing-item-form" class="flex gap-2 mb-4">
-                    <input type="text" id="packing-item-name" class="form-input flex-grow" placeholder="e.g., Tent, Camping Chair" required>
+                    <input type="text" id="packing-item-name" class="form-input flex-grow" placeholder="e.g., Tent, Sleeping Bag" required>
                     <button type="submit" class="btn btn-primary">Add</button>
                 </form>
                 <ul id="packing-list" class="space-y-2"></ul>
@@ -139,42 +145,34 @@
     </div>
 
     <!-- Modals -->
-    <div id="initErrorModal" class="modal-backdrop hidden">
-        <div class="card w-full max-w-md">
-            <h3 class="text-xl font-bold mb-4 text-red-400">Application Error</h3>
-            <p class="text-gray-300 mb-4">Could not initialize the application. Please check your Firebase credentials in the HTML file.</p>
+    <div id="loginModal" class="modal-backdrop">
+        <div class="card w-full max-w-sm">
+            <h3 class="text-xl font-bold mb-4 text-center">Welcome to the Planner!</h3>
+            <p class="text-gray-300 mb-6 text-center text-sm">Sign in to sync your lists across devices.</p>
+            <div class="space-y-3">
+                <button id="googleSignInBtn" class="btn btn-secondary w-full"><svg class="w-5 h-5" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path><path fill="none" d="M0 0h48v48H0z"></path></svg>Sign in with Google</button>
+                <button id="appleSignInBtn" class="btn bg-black text-white hover:bg-gray-800 w-full"><svg class="w-5 h-5" viewBox="0 0 24 24"><path fill="currentColor" d="M15.22,6.15a2.4,2.4,0,0,0,-1.43.7,2.52,2.52,0,0,0-.86,1.43,4.61,4.61,0,0,0,.1,1.54,3.24,3.24,0,0,0,.79,1.25,2.4,2.4,0,0,0,1.43.7,2.52,2.52,0,0,0,.86-1.43,4.61,4.61,0,0,0-.1-1.54,3.24,3.24,0,0,0-.79-1.25M16.33,0A7.24,7.24,0,0,0,12.4,2.62,7.4,7.4,0,0,0,8.27.15a7.24,7.24,0,0,0,-4,2.47,7.4,7.4,0,0,0-2.47,4,7.24,7.24,0,0,0,2.47,4,7.4,7.4,0,0,0,4,2.47,7.24,7.24,0,0,0,4-2.47,7.4,7.4,0,0,0,2.47-4,7.24,7.24,0,0,0-2.47-4A7.4,7.4,0,0,0,16.33,0Z"/></svg>Sign in with Apple</button>
+                <button id="microsoftSignInBtn" class="btn bg-[#00A4EF] text-white hover:bg-[#0095D7] w-full"><svg class="w-5 h-5" viewBox="0 0 21 21"><path fill="currentColor" d="M1,1h9v9H1V1z M11,1h9v9h-9V1z M1,11h9v9H1V11z M11,11h9v9h-9V11z"/></svg>Sign in with Microsoft</button>
+            </div>
+            <div class="relative flex py-5 items-center">
+                <div class="flex-grow border-t border-gray-600"></div>
+                <span class="flex-shrink mx-4 text-gray-400 text-sm">OR</span>
+                <div class="flex-grow border-t border-gray-600"></div>
+            </div>
+            <button id="anonymousSignInBtn" class="btn btn-secondary w-full">Continue Anonymously</button>
         </div>
     </div>
+    <div id="initErrorModal" class="modal-backdrop hidden">
+        <div class="card w-full max-w-md"><h3 class="text-xl font-bold mb-4 text-red-400">Application Error</h3><p class="text-gray-300 mb-4">Could not initialize the application. Please check your Firebase credentials in the HTML file.</p></div>
+    </div>
     <div id="authErrorModal" class="modal-backdrop hidden">
-        <div class="card w-full max-w-md">
-            <h3 class="text-xl font-bold mb-4 text-yellow-400">Action Required: Enable Anonymous Sign-In</h3>
-            <p class="text-gray-300 mb-4">The application failed to sign you in anonymously. This is usually because it's not enabled in your Firebase project.</p>
-            <div class="text-left text-sm bg-gray-900 p-4 rounded-lg">
-                <p class="font-bold text-gray-200">How to fix:</p>
-                <ol class="list-decimal list-inside mt-2 space-y-1 text-gray-300">
-                    <li>Go to the <a href="https://console.firebase.google.com/" target="_blank" class="text-indigo-400 underline">Firebase Console</a>.</li>
-                    <li>Select your project: <strong>barkplanner</strong>.</li>
-                    <li>In the left menu, go to <strong>Authentication</strong>.</li>
-                    <li>Click the <strong>Sign-in method</strong> tab.</li>
-                    <li>Find <strong>Anonymous</strong> in the list and enable it.</li>
-                    <li>Reload this page.</li>
-                </ol>
-            </div>
-        </div>
+        <div class="card w-full max-w-md"><h3 class="text-xl font-bold mb-4 text-yellow-400">Action Required: Enable Sign-In Method</h3><p class="text-gray-300 mb-4">The application failed to sign you in. Please enable the relevant provider in your Firebase project.</p><div class="text-left text-sm bg-gray-900 p-4 rounded-lg"><p class="font-bold text-gray-200">How to fix:</p><ol class="list-decimal list-inside mt-2 space-y-1 text-gray-300"><li>Go to the <a href="https://console.firebase.google.com/" target="_blank" class="text-indigo-400 underline">Firebase Console</a>.</li><li>Select your project: <strong>barkplanner</strong>.</li><li>In the left menu, go to <strong>Authentication</strong>.</li><li>Click the <strong>Sign-in method</strong> tab.</li><li>Find the provider you want to use (Google, Apple, Microsoft, or Anonymous) and enable it.</li><li>Reload this page.</li></ol></div></div>
     </div>
     <div id="confirmationModal" class="modal-backdrop hidden">
         <div class="card w-full max-w-sm"><h3 class="text-xl font-bold mb-4" id="modalTitle"></h3><p class="text-gray-300 mb-6" id="modalMessage"></p><div class="flex justify-end gap-4"><button id="modalCancel" class="btn btn-secondary">Cancel</button><button id="modalConfirm" class="btn btn-danger">Confirm</button></div></div>
     </div>
     <div id="usernameModal" class="modal-backdrop hidden">
-        <div class="card w-full max-w-sm">
-            <h3 class="text-xl font-bold mb-4">Set Your Username</h3>
-            <p class="text-gray-300 mb-4">Choose a name so your friends know who you are.</p>
-            <form id="usernameForm">
-                <input type="text" id="usernameInput" class="form-input" placeholder="Enter username" required>
-                <p id="usernameError" class="text-red-400 text-sm mt-2 hidden"></p>
-                <button type="submit" class="btn btn-primary w-full mt-4">Save</button>
-            </form>
-        </div>
+        <div class="card w-full max-w-sm"><h3 class="text-xl font-bold mb-4">Set Your Username</h3><p class="text-gray-300 mb-4">Choose a name so your friends know who you are.</p><form id="usernameForm"><input type="text" id="usernameInput" class="form-input" placeholder="Enter username" required><p id="usernameError" class="text-red-400 text-sm mt-2 hidden"></p><button type="submit" class="btn btn-primary w-full mt-4">Save</button></form></div>
     </div>
     <div id="qrModal" class="modal-backdrop hidden">
         <div class="card w-full max-w-sm text-center"><h3 class="text-xl font-bold mb-4">Scan to Join!</h3><canvas id="qrCanvas"></canvas><p class="text-gray-400 mt-4 text-sm">Scan this code with another device to join this planner.</p><button id="closeQrBtn" class="btn btn-secondary w-full mt-4">Close</button></div>
@@ -183,7 +181,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, OAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, addDoc, setDoc, getDoc, deleteDoc, onSnapshot, query, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- CONFIG & INITIALIZATION ---
@@ -200,14 +198,17 @@
         let app, auth, db;
         let userId = null;
         let username = null;
-        let isAuthReady = false;
         let userDocRef = null;
         
-        // --- DATA CACHING ---
         let usernames = {};
         let packingItems = [];
         let requestItems = [];
         let travelPlans = [];
+
+        // Firestore collection names
+        const USERS_COLLECTION = 'users';
+        const REQUESTS_COLLECTION = 'item_requests';
+        const TRAVEL_COLLECTION = 'travel_plans';
 
         try {
             app = initializeApp(firebaseConfig);
@@ -218,12 +219,9 @@
             document.getElementById('initErrorModal').classList.remove('hidden');
         }
 
-        const USERS_COLLECTION = 'users';
-        const PACKING_COLLECTION = 'packing_items';
-        const REQUESTS_COLLECTION = 'item_requests';
-        const TRAVEL_COLLECTION = 'travel_plans';
-
         // --- DOM ELEMENTS ---
+        const appContainer = document.getElementById('app');
+        const loginModal = document.getElementById('loginModal');
         const usernameDisplay = document.getElementById('usernameDisplay');
         const packingForm = document.getElementById('add-packing-item-form');
         const packingItemNameInput = document.getElementById('packing-item-name');
@@ -250,63 +248,170 @@
         const qrModal = document.getElementById('qrModal');
         const showQrBtn = document.getElementById('showQrBtn');
         const closeQrBtn = document.getElementById('closeQrBtn');
+        
+        const googleSignInBtn = document.getElementById('googleSignInBtn');
+        const appleSignInBtn = document.getElementById('appleSignInBtn');
+        const microsoftSignInBtn = document.getElementById('microsoftSignInBtn');
+        const anonymousSignInBtn = document.getElementById('anonymousSignInBtn');
+        const signOutBtn = document.getElementById('signOutBtn');
 
-        // --- MODAL LOGIC ---
-        let confirmCallback = null;
-        function showConfirmationModal(title, message, onConfirm) {
-            confirmationModal.querySelector('#modalTitle').textContent = title;
-            confirmationModal.querySelector('#modalMessage').textContent = message;
-            confirmCallback = onConfirm;
-            confirmationModal.classList.remove('hidden');
-        }
-        modalConfirmBtn.addEventListener('click', () => { if (confirmCallback) confirmCallback(); confirmationModal.classList.add('hidden'); });
-        modalCancelBtn.addEventListener('click', () => confirmationModal.classList.add('hidden'));
+        // --- AUTHENTICATION ---
+        const googleProvider = new GoogleAuthProvider();
+        const appleProvider = new OAuthProvider('apple.com');
+        const microsoftProvider = new OAuthProvider('microsoft.com');
 
-        // --- AUTHENTICATION & USER SETUP ---
+        const signIn = async (provider) => {
+            try {
+                await signInWithPopup(auth, provider);
+            } catch (error) {
+                console.error("Sign in failed:", error);
+                if (error.code === 'auth/account-exists-with-different-credential' || error.code === 'auth/configuration-not-found') {
+                    document.getElementById('authErrorModal').classList.remove('hidden');
+                }
+            }
+        };
+
+        googleSignInBtn.addEventListener('click', () => signIn(googleProvider));
+        appleSignInBtn.addEventListener('click', () => signIn(appleProvider));
+        microsoftSignInBtn.addEventListener('click', () => signIn(microsoftProvider));
+        anonymousSignInBtn.addEventListener('click', async () => {
+             try {
+                await signInAnonymously(auth);
+            } catch (error) {
+                console.error("Anonymous sign in failed:", error);
+                if (error.code === 'auth/configuration-not-found') {
+                    document.getElementById('authErrorModal').classList.remove('hidden');
+                }
+            }
+        });
+        signOutBtn.addEventListener('click', () => signOut(auth));
+
+
         if (auth) {
             onAuthStateChanged(auth, async (user) => {
                 if (user) {
+                    // User is signed in.
                     userId = user.uid;
                     userDocRef = doc(db, USERS_COLLECTION, userId);
-                    isAuthReady = true;
-                    await checkUsername();
+                    await checkUsername(user);
                     loadAllData();
+                    loginModal.classList.add('hidden');
+                    appContainer.classList.remove('hidden');
                 } else {
-                     try {
-                        await signInAnonymously(auth);
-                    } catch (error) {
-                        console.error("Authentication failed:", error);
-                        if (error.code === 'auth/configuration-not-found') {
-                            document.getElementById('authErrorModal').classList.remove('hidden');
-                        }
-                    }
+                    // User is signed out.
+                    userId = null;
+                    username = null;
+                    userDocRef = null;
+                    listeners.forEach(unsubscribe => unsubscribe());
+                    listeners = [];
+                    loginModal.classList.remove('hidden');
+                    appContainer.classList.add('hidden');
                 }
             });
         }
 
-        async function checkUsername() {
+        async function checkUsername(user) {
             const userDoc = await getDoc(userDocRef);
             if (userDoc.exists() && userDoc.data().username) {
                 username = userDoc.data().username;
                 usernameDisplay.textContent = username;
                 usernameModal.classList.add('hidden');
             } else {
-                usernameDisplay.textContent = 'Guest';
-                usernameModal.classList.remove('hidden');
+                // If user has a display name from the auth provider, use it.
+                // Otherwise, prompt for one.
+                const newUsername = user.displayName || (user.isAnonymous ? 'Guest' : '');
+                if (newUsername && newUsername !== 'Guest') {
+                    await setDoc(userDocRef, { username: newUsername }, { merge: true });
+                    username = newUsername;
+                    usernameDisplay.textContent = username;
+                } else {
+                    usernameDisplay.textContent = 'Guest';
+                    usernameModal.classList.remove('hidden');
+                }
             }
         }
 
-        usernameDisplay.addEventListener('click', () => {
-            usernameInput.value = username || '';
-            usernameModal.classList.remove('hidden');
-        });
+        // --- DATA LISTENERS ---
+        let listeners = []; // To store unsubscribe functions
+        function loadAllData() {
+            if (!userId || !db) return;
+            listeners.forEach(unsubscribe => unsubscribe());
+            listeners = [];
 
+            const usernamesUnsub = onSnapshot(collection(db, USERS_COLLECTION), (snapshot) => {
+                snapshot.docs.forEach(doc => { usernames[doc.id] = doc.data().username || `User...${doc.id.substring(0,4)}`; });
+                renderAll();
+            });
+            const packingUnsub = onSnapshot(collection(db, USERS_COLLECTION, userId, 'packing_items'), (snapshot) => {
+                packingItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderAll();
+            });
+            const requestsUnsub = onSnapshot(collection(db, REQUESTS_COLLECTION), (snapshot) => {
+                requestItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderAll();
+            });
+            const travelUnsub = onSnapshot(collection(db, TRAVEL_COLLECTION), (snapshot) => {
+                travelPlans = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderAll();
+            });
+            listeners.push(usernamesUnsub, packingUnsub, requestsUnsub, travelUnsub);
+        }
+        
+        // --- MASTER RENDER FUNCTION ---
+        function renderAll() {
+            renderPackingList();
+            renderRequestList();
+            renderTravelPlans();
+        }
+
+        // --- RENDERING LOGIC ---
+        function getUserDisplayName(uid) { return usernames[uid] || `User...${uid ? uid.substring(0,4) : '??'}`; }
+        function renderPackingList() {
+            packingItems.sort((a, b) => (a.createdAt?.toDate() || 0) - (b.createdAt?.toDate() || 0));
+            packingList.innerHTML = '';
+            if (packingItems.length === 0) { packingList.innerHTML = `<li class="text-gray-500">Nothing packed yet.</li>`; return; }
+            packingItems.forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'flex justify-between items-center bg-gray-700 p-2 rounded-lg';
+                li.innerHTML = `<span>${item.name}</span><button data-id="${item.id}" class="delete-packing-item btn btn-danger btn-sm !p-1 !text-xs">X</button>`;
+                packingList.appendChild(li);
+            });
+        }
+        function renderRequestList() {
+            requestItems.sort((a, b) => (a.createdAt?.toDate() || 0) - (b.createdAt?.toDate() || 0));
+            requestList.innerHTML = '';
+            if (requestItems.length === 0) { requestList.innerHTML = `<li class="text-gray-500">No requests yet.</li>`; return; }
+            requestItems.forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'flex justify-between items-center bg-gray-700 p-2 rounded-lg';
+                let content = `<span>${item.name} <em class="text-xs text-gray-400">(req. by ${getUserDisplayName(item.requestedBy)})</em></span>`;
+                if (item.status === 'fulfilled') {
+                    content += `<span class="text-sm text-green-400">Brought by ${getUserDisplayName(item.fulfilledBy)}</span>`;
+                } else {
+                    content += `<button data-id="${item.id}" class="fulfill-request-item btn btn-success btn-sm !py-1 !px-2">I'll bring it!</button>`;
+                }
+                li.innerHTML = content;
+                requestList.appendChild(li);
+            });
+        }
+        function renderTravelPlans() {
+            travelPlans.sort((a, b) => (b.updatedAt?.toDate() || 0) - (a.updatedAt?.toDate() || 0));
+            travelPlansList.innerHTML = '';
+            if (travelPlans.length === 0) { travelPlansList.innerHTML = `<p class="text-gray-500">No travel plans saved yet.</p>`; return; }
+            travelPlans.forEach(plan => {
+                const div = document.createElement('div');
+                div.className = 'bg-gray-700 p-3 rounded-lg';
+                div.innerHTML = `<div class="flex justify-between items-start"><h4 class="font-bold text-lg text-indigo-300">${plan.name}</h4>${plan.userId === userId ? `<button data-id="${plan.id}" class="delete-travel-plan btn btn-danger btn-sm !p-1 !text-xs">X</button>` : ''}</div><p class="text-sm"><strong class="text-gray-400">Arrival:</strong> ${plan.arrival || 'N/A'}</p><p class="text-sm"><strong class="text-gray-400">Departure:</strong> ${plan.departure || 'N/A'}</p><p class="text-sm"><strong class="text-gray-400">Transport:</strong> ${plan.mode || 'N/A'}</p>${plan.notes ? `<p class="text-sm mt-2 pt-2 border-t border-gray-600"><strong class="text-gray-400">Notes:</strong> ${plan.notes}</p>` : ''}`;
+                travelPlansList.appendChild(div);
+            });
+        }
+
+        // --- EVENT HANDLERS ---
         usernameForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             usernameError.classList.add('hidden');
             const newUsername = usernameInput.value.trim();
             const saveButton = usernameForm.querySelector('button[type="submit"]');
-
             if (newUsername) {
                 saveButton.disabled = true;
                 saveButton.textContent = 'Saving...';
@@ -325,116 +430,18 @@
                 }
             }
         });
-
-        // --- DATA LOADING & LISTENERS ---
-        function loadAllData() {
-            if (!isAuthReady || !db) return;
-            listenToUsernames();
-            listenToPackingList();
-            listenToItemRequests();
-            listenToTravelPlans();
-        }
-        
-        function listenToUsernames() {
-            onSnapshot(collection(db, USERS_COLLECTION), (snapshot) => {
-                snapshot.docs.forEach(doc => {
-                    usernames[doc.id] = doc.data().username || `User...${doc.id.substring(0,4)}`;
-                });
-                renderPackingList();
-                renderRequestList();
-                renderTravelPlans();
-            });
-        }
-
-        function listenToPackingList() {
-            onSnapshot(query(collection(db, PACKING_COLLECTION)), (snapshot) => {
-                packingItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                packingItems.sort((a, b) => (a.createdAt?.toDate() || 0) - (b.createdAt?.toDate() || 0));
-                renderPackingList();
-            });
-        }
-
-        function listenToItemRequests() {
-            onSnapshot(query(collection(db, REQUESTS_COLLECTION)), (snapshot) => {
-                requestItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                requestItems.sort((a, b) => (a.createdAt?.toDate() || 0) - (b.createdAt?.toDate() || 0));
-                renderRequestList();
-            });
-        }
-
-        function listenToTravelPlans() {
-            onSnapshot(query(collection(db, TRAVEL_COLLECTION)), (snapshot) => {
-                travelPlans = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                travelPlans.sort((a, b) => (b.updatedAt?.toDate() || 0) - (a.updatedAt?.toDate() || 0));
-                renderTravelPlans();
-            });
-        }
-
-        // --- RENDERING LOGIC ---
-        function getUserDisplayName(uid) {
-            return usernames[uid] || `User...${uid ? uid.substring(0,4) : '??'}`;
-        }
-
-        function renderPackingList() {
-            packingList.innerHTML = '';
-            if (packingItems.length === 0) {
-                packingList.innerHTML = `<li class="text-gray-500">Nothing packed yet.</li>`;
-                return;
-            }
-            packingItems.forEach(item => {
-                const li = document.createElement('li');
-                li.className = 'flex justify-between items-center bg-gray-700 p-2 rounded-lg';
-                li.innerHTML = `<span>${item.name}</span><div class="flex items-center gap-2"><span class="text-xs text-indigo-300">${getUserDisplayName(item.packedBy)}</span>${item.packedBy === userId ? `<button data-id="${item.id}" class="delete-packing-item btn btn-danger btn-sm !p-1 !text-xs">X</button>` : ''}</div>`;
-                packingList.appendChild(li);
-            });
-        }
-
-        function renderRequestList() {
-            requestList.innerHTML = '';
-            if (requestItems.length === 0) {
-                requestList.innerHTML = `<li class="text-gray-500">No requests yet.</li>`;
-                return;
-            }
-            requestItems.forEach(item => {
-                const li = document.createElement('li');
-                li.className = 'flex justify-between items-center bg-gray-700 p-2 rounded-lg';
-                let content = `<span>${item.name} <em class="text-xs text-gray-400">(req. by ${getUserDisplayName(item.requestedBy)})</em></span>`;
-                if (item.status === 'fulfilled') {
-                    content += `<span class="text-sm text-green-400">Brought by ${getUserDisplayName(item.fulfilledBy)}</span>`;
-                } else {
-                    content += `<button data-id="${item.id}" class="fulfill-request-item btn btn-success btn-sm !py-1 !px-2">I'll bring it!</button>`;
-                }
-                li.innerHTML = content;
-                requestList.appendChild(li);
-            });
-        }
-
-        function renderTravelPlans() {
-            travelPlansList.innerHTML = '';
-            if (travelPlans.length === 0) {
-                travelPlansList.innerHTML = `<p class="text-gray-500">No travel plans saved yet.</p>`;
-                return;
-            }
-            travelPlans.forEach(plan => {
-                const div = document.createElement('div');
-                div.className = 'bg-gray-700 p-3 rounded-lg';
-                div.innerHTML = `<div class="flex justify-between items-start"><h4 class="font-bold text-lg text-indigo-300">${plan.name}</h4>${plan.userId === userId ? `<button data-id="${plan.id}" class="delete-travel-plan btn btn-danger btn-sm !p-1 !text-xs">X</button>` : ''}</div><p class="text-sm"><strong class="text-gray-400">Arrival:</strong> ${plan.arrival || 'N/A'}</p><p class="text-sm"><strong class="text-gray-400">Departure:</strong> ${plan.departure || 'N/A'}</p><p class="text-sm"><strong class="text-gray-400">Transport:</strong> ${plan.mode || 'N/A'}</p>${plan.notes ? `<p class="text-sm mt-2 pt-2 border-t border-gray-600"><strong class="text-gray-400">Notes:</strong> ${plan.notes}</p>` : ''}`;
-                travelPlansList.appendChild(div);
-            });
-        }
-
-        // --- EVENT HANDLERS ---
-        packingForm.addEventListener('submit', async (e) => { e.preventDefault(); const n = packingItemNameInput.value.trim(); if (n && userId) { await addDoc(collection(db, PACKING_COLLECTION), { name: n, packedBy: userId, createdAt: new Date() }); packingItemNameInput.value = ''; } });
+        packingForm.addEventListener('submit', async (e) => { e.preventDefault(); const n = packingItemNameInput.value.trim(); if (n && userId) { await addDoc(collection(db, USERS_COLLECTION, userId, 'packing_items'), { name: n, createdAt: new Date() }); packingItemNameInput.value = ''; } });
+        packingList.addEventListener('click', (e) => { if (e.target.classList.contains('delete-packing-item')) { const docId = e.target.dataset.id; showConfirmationModal('Delete Item', 'Are you sure?', () => deleteDoc(doc(db, USERS_COLLECTION, userId, 'packing_items', docId))); } });
         requestForm.addEventListener('submit', async (e) => { e.preventDefault(); const n = requestItemNameInput.value.trim(); if (n && userId) { await addDoc(collection(db, REQUESTS_COLLECTION), { name: n, requestedBy: userId, status: 'requested', fulfilledBy: null, createdAt: new Date() }); requestItemNameInput.value = ''; } });
         travelForm.addEventListener('submit', async (e) => { e.preventDefault(); if (username && userId) { await setDoc(doc(db, TRAVEL_COLLECTION, userId), { name: username, arrival: travelArrivalInput.value.trim(), departure: travelDepartureInput.value.trim(), mode: travelModeInput.value.trim(), notes: travelNotesInput.value.trim(), updatedAt: new Date(), userId: userId }); } });
-
-        packingList.addEventListener('click', (e) => { if (e.target.classList.contains('delete-packing-item')) { showConfirmationModal('Delete Item', 'Are you sure?', () => deleteDoc(doc(db, PACKING_COLLECTION, e.target.dataset.id))); } });
         requestList.addEventListener('click', (e) => { if (e.target.classList.contains('fulfill-request-item')) { updateDoc(doc(db, REQUESTS_COLLECTION, e.target.dataset.id), { status: 'fulfilled', fulfilledBy: userId }); } });
         travelPlansList.addEventListener('click', (e) => { if (e.target.classList.contains('delete-travel-plan')) { showConfirmationModal('Delete Plan', 'Are you sure?', () => { deleteDoc(doc(db, TRAVEL_COLLECTION, e.target.dataset.id)); travelForm.reset(); }); } });
-
+        usernameDisplay.addEventListener('click', () => { usernameInput.value = username || ''; usernameModal.classList.remove('hidden'); });
         showQrBtn.addEventListener('click', () => { new QRious({ element: document.getElementById('qrCanvas'), value: window.location.href, size: 256, padding: 16 }); qrModal.classList.remove('hidden'); });
         closeQrBtn.addEventListener('click', () => qrModal.classList.add('hidden'));
-
+        modalCancelBtn.addEventListener('click', () => confirmationModal.classList.add('hidden'));
+        function showConfirmationModal(title, message, onConfirm) { confirmationModal.querySelector('#modalTitle').textContent = title; confirmationModal.querySelector('#modalMessage').textContent = message; confirmCallback = onConfirm; confirmationModal.classList.remove('hidden'); }
+        modalConfirmBtn.addEventListener('click', () => { if (confirmCallback) confirmCallback(); confirmationModal.classList.add('hidden'); });
     </script>
 </body>
 </html>
