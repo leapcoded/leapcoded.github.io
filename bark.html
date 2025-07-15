@@ -135,6 +135,14 @@
     </div>
 
     <!-- Modals -->
+    <div id="initErrorModal" class="modal-backdrop hidden">
+        <div class="card w-full max-w-md">
+            <h3 class="text-xl font-bold mb-4 text-red-400">Application Error</h3>
+            <p class="text-gray-300 mb-4">Could not initialize the application. This is likely because the database configuration is missing.</p>
+            <p class="text-gray-400 text-sm">This planner is designed to run in a specific environment that provides database credentials automatically. To host it yourself (e.g., on GitHub Pages), you'll need to create a free Firebase project and add your project's configuration details to the HTML file.</p>
+            <p class="text-gray-400 text-sm mt-2">See the comments in the &lt;script&gt; section for more details.</p>
+        </div>
+    </div>
     <div id="confirmationModal" class="modal-backdrop hidden">
         <div class="card w-full max-w-sm"><h3 class="text-xl font-bold mb-4" id="modalTitle"></h3><p class="text-gray-300 mb-6" id="modalMessage"></p><div class="flex justify-end gap-4"><button id="modalCancel" class="btn btn-secondary">Cancel</button><button id="modalConfirm" class="btn btn-danger">Confirm</button></div></div>
     </div>
@@ -152,6 +160,30 @@
         import { getFirestore, collection, doc, addDoc, setDoc, getDoc, deleteDoc, onSnapshot, query, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- CONFIG & INITIALIZATION ---
+        // IMPORTANT: This application requires a Firebase project to function.
+        // The '__firebase_config' variable is injected automatically in the original
+        // development environment. To host this yourself, you need to create a
+        // free project on the Firebase website (firebase.google.com).
+        
+        // 1. Create a new Firebase project.
+        // 2. Go to Project Settings -> General tab.
+        // 3. Under "Your apps", create a new Web App.
+        // 4. Firebase will give you a 'firebaseConfig' object.
+        // 5. Replace the line below that starts with "const firebaseConfig = ..."
+        //    with the configuration object they provide you.
+        
+   
+        const firebaseConfig = {
+          apiKey: "AIzaSyDAHz4WlysnKsO3oZaZeI0LXHtHAs5stC0",
+          authDomain: "barkplanner.firebaseapp.com",
+          projectId: "barkplanner",
+          storageBucket: "barkplanner.firebasestorage.app",
+          messagingSenderId: "105053819446",
+          appId: "1:105053819446:web:f096132d8b4a52a8347e97",
+          measurementId: "G-KRQRVW2LSJ"
+        };
+
+    
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'barktangent-2026-planner';
         const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
 
@@ -168,7 +200,8 @@
             db = getFirestore(app);
         } catch (e) {
             console.error("Error initializing Firebase:", e);
-            document.body.innerHTML = '<div class="text-center p-8 text-red-500">Error initializing application. Please check console.</div>';
+            // Show a user-friendly modal instead of a blank page or console error
+            document.getElementById('initErrorModal').classList.remove('hidden');
         }
 
         const USERS_COLLECTION = `/artifacts/${appId}/public/data/users`;
@@ -215,25 +248,27 @@
         modalCancelBtn.addEventListener('click', () => confirmationModal.classList.add('hidden'));
 
         // --- USERNAME & AUTH ---
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                userId = user.uid;
-                userDocRef = doc(db, USERS_COLLECTION, userId);
-                isAuthReady = true;
-                await checkUsername();
-                loadAllData();
-            } else {
-                 try {
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    } else {
-                        await signInAnonymously(auth);
+        if (auth) { // Only proceed if Firebase initialized correctly
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    userId = user.uid;
+                    userDocRef = doc(db, USERS_COLLECTION, userId);
+                    isAuthReady = true;
+                    await checkUsername();
+                    loadAllData();
+                } else {
+                     try {
+                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                            await signInWithCustomToken(auth, __initial_auth_token);
+                        } else {
+                            await signInAnonymously(auth);
+                        }
+                    } catch (error) {
+                        console.error("Authentication failed:", error);
                     }
-                } catch (error) {
-                    console.error("Authentication failed:", error);
                 }
-            }
-        });
+            });
+        }
 
         async function checkUsername() {
             const userDoc = await getDoc(userDocRef);
@@ -284,13 +319,11 @@
 
         // --- DATA LISTENERS & RENDERING ---
         
-        // Listen to all usernames to build a cache
         function listenToUsernames() {
             onSnapshot(collection(db, USERS_COLLECTION), (snapshot) => {
                 snapshot.docs.forEach(doc => {
                     usernames[doc.id] = doc.data().username || `User...${doc.id.substring(0,4)}`;
                 });
-                // Force re-render of lists that depend on usernames
                 listenToPackingList();
                 listenToItemRequests();
                 listenToTravelPlans();
@@ -301,7 +334,6 @@
             return usernames[uid] || `User...${uid.substring(0,4)}`;
         }
 
-        // Packing List
         packingForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const itemName = packingItemNameInput.value.trim();
@@ -331,7 +363,6 @@
             }
         });
 
-        // Item Requests
         requestForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const itemName = requestItemNameInput.value.trim();
@@ -367,7 +398,6 @@
             }
         });
 
-        // Travel Plans
         travelForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             if (username && userId) {
