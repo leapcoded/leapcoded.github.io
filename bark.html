@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barktargent 2026 - Shared Planner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827; /* bg-gray-900 */
+            color: #f3f4f6; /* text-gray-200 */
+        }
+        .card {
+            background-color: #1f2937; /* bg-gray-800 */
+            border-radius: 0.75rem; /* rounded-xl */
+            padding: 1.5rem; /* p-6 */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .btn {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            text-align: center;
+            transition: background-color 0.2s;
+            cursor: pointer;
+        }
+        .btn-primary {
+            background-color: #4f46e5; /* bg-indigo-600 */
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #4338ca; /* hover:bg-indigo-700 */
+        }
+        .btn-secondary {
+            background-color: #374151; /* bg-gray-700 */
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #4b5563; /* hover:bg-gray-600 */
+        }
+        .btn-success {
+            background-color: #16a34a; /* bg-green-600 */
+            color: white;
+        }
+        .btn-success:hover {
+            background-color: #15803d; /* hover:bg-green-700 */
+        }
+        .btn-danger {
+            background-color: #dc2626; /* bg-red-600 */
+            color: white;
+        }
+        .btn-danger:hover {
+            background-color: #b91c1c; /* hover:bg-red-700 */
+        }
+        .form-input {
+            width: 100%;
+            background-color: #374151; /* bg-gray-700 */
+            border: 1px solid #4b5563; /* border-gray-600 */
+            color: white;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+        }
+        .form-input::placeholder {
+            color: #9ca3af; /* placeholder-gray-400 */
+        }
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+            transition: opacity 0.3s;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div id="app" class="container mx-auto p-4 md:p-8">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold text-white">Barktargent 2026 Planner</h1>
+            <p class="text-gray-400 mt-2">A shared space to coordinate packing and travel.</p>
+            <div class="mt-4 flex justify-center items-center gap-4">
+                 <div class="text-xs text-gray-500 bg-gray-800 p-2 rounded-lg inline-block">
+                    Logged in as: <span id="usernameDisplay" class="font-mono text-indigo-400 cursor-pointer" title="Click to change username">Loading...</span>
+                </div>
+                <button id="showQrBtn" class="btn btn-secondary btn-sm !py-1 !px-2">Share via QR</button>
+            </div>
+        </header>
+
+        <main class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            
+            <section id="packing-list-section" class="card">
+                <h2 class="text-2xl font-bold mb-4 text-white">Group Packing List</h2>
+                <form id="add-packing-item-form" class="flex gap-2 mb-4">
+                    <input type="text" id="packing-item-name" class="form-input flex-grow" placeholder="e.g., Tent, Camping Chair" required>
+                    <button type="submit" class="btn btn-primary">Add</button>
+                </form>
+                <ul id="packing-list" class="space-y-2"></ul>
+            </section>
+
+            <section id="item-requests-section" class="card">
+                <h2 class="text-2xl font-bold mb-4 text-white">Requested Items</h2>
+                <form id="add-request-form" class="flex gap-2 mb-4">
+                    <input type="text" id="request-item-name" class="form-input flex-grow" placeholder="e.g., Can Opener, Sunscreen" required>
+                    <button type="submit" class="btn btn-primary">Request</button>
+                </form>
+                <ul id="request-list" class="space-y-2"></ul>
+            </section>
+
+            <section id="travel-plans-section" class="card md:col-span-2 lg:col-span-1">
+                <h2 class="text-2xl font-bold mb-4 text-white">Travel Plans</h2>
+                <form id="travel-plan-form" class="space-y-4">
+                    <div class="hidden"><input type="text" id="travel-user-name" class="form-input" placeholder="Your Name" required></div>
+                    <input type="text" id="travel-arrival" class="form-input" placeholder="Arrival (e.g., Weds 2pm)">
+                    <input type="text" id="travel-departure" class="form-input" placeholder="Departure (e.g., Sun 11am)">
+                    <input type="text" id="travel-mode" class="form-input" placeholder="Transport (e.g., Car, Train)">
+                    <textarea id="travel-notes" class="form-input" rows="2" placeholder="Notes (e.g., 'Space for 2 people')"></textarea>
+                    <button type="submit" class="btn btn-success w-full">Save My Plan</button>
+                </form>
+                <div id="travel-plans-list" class="mt-6 space-y-4"></div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="confirmationModal" class="modal-backdrop hidden">
+        <div class="card w-full max-w-sm"><h3 class="text-xl font-bold mb-4" id="modalTitle"></h3><p class="text-gray-300 mb-6" id="modalMessage"></p><div class="flex justify-end gap-4"><button id="modalCancel" class="btn btn-secondary">Cancel</button><button id="modalConfirm" class="btn btn-danger">Confirm</button></div></div>
+    </div>
+    <div id="usernameModal" class="modal-backdrop hidden">
+        <div class="card w-full max-w-sm"><h3 class="text-xl font-bold mb-4">Set Your Username</h3><p class="text-gray-300 mb-4">Choose a name so your friends know who you are.</p><form id="usernameForm"><input type="text" id="usernameInput" class="form-input" placeholder="Enter username" required><button type="submit" class="btn btn-primary w-full mt-4">Save</button></form></div>
+    </div>
+    <div id="qrModal" class="modal-backdrop hidden">
+        <div class="card w-full max-w-sm text-center"><h3 class="text-xl font-bold mb-4">Scan to Join!</h3><canvas id="qrCanvas"></canvas><p class="text-gray-400 mt-4 text-sm">Scan this code with another device to join this planner.</p><button id="closeQrBtn" class="btn btn-secondary w-full mt-4">Close</button></div>
+    </div>
+
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, addDoc, setDoc, getDoc, deleteDoc, onSnapshot, query, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- CONFIG & INITIALIZATION ---
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'barktangent-2026-planner';
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+
+        let app, auth, db;
+        let userId = null;
+        let username = null;
+        let isAuthReady = false;
+        let userDocRef = null;
+        let usernames = {}; // Cache for usernames
+
+        try {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+        } catch (e) {
+            console.error("Error initializing Firebase:", e);
+            document.body.innerHTML = '<div class="text-center p-8 text-red-500">Error initializing application. Please check console.</div>';
+        }
+
+        const USERS_COLLECTION = `/artifacts/${appId}/public/data/users`;
+        const PACKING_COLLECTION = `/artifacts/${appId}/public/data/packing_items`;
+        const REQUESTS_COLLECTION = `/artifacts/${appId}/public/data/item_requests`;
+        const TRAVEL_COLLECTION = `/artifacts/${appId}/public/data/travel_plans`;
+
+        // --- DOM ELEMENTS ---
+        const usernameDisplay = document.getElementById('usernameDisplay');
+        const packingForm = document.getElementById('add-packing-item-form');
+        const packingItemNameInput = document.getElementById('packing-item-name');
+        const packingList = document.getElementById('packing-list');
+        const requestForm = document.getElementById('add-request-form');
+        const requestItemNameInput = document.getElementById('request-item-name');
+        const requestList = document.getElementById('request-list');
+        const travelForm = document.getElementById('travel-plan-form');
+        const travelArrivalInput = document.getElementById('travel-arrival');
+        const travelDepartureInput = document.getElementById('travel-departure');
+        const travelModeInput = document.getElementById('travel-mode');
+        const travelNotesInput = document.getElementById('travel-notes');
+        const travelPlansList = document.getElementById('travel-plans-list');
+        
+        const confirmationModal = document.getElementById('confirmationModal');
+        const modalConfirmBtn = document.getElementById('modalConfirm');
+        const modalCancelBtn = document.getElementById('modalCancel');
+        
+        const usernameModal = document.getElementById('usernameModal');
+        const usernameForm = document.getElementById('usernameForm');
+        const usernameInput = document.getElementById('usernameInput');
+
+        const qrModal = document.getElementById('qrModal');
+        const showQrBtn = document.getElementById('showQrBtn');
+        const closeQrBtn = document.getElementById('closeQrBtn');
+
+        // --- MODAL LOGIC ---
+        let confirmCallback = null;
+        function showConfirmationModal(title, message, onConfirm) {
+            confirmationModal.querySelector('#modalTitle').textContent = title;
+            confirmationModal.querySelector('#modalMessage').textContent = message;
+            confirmCallback = onConfirm;
+            confirmationModal.classList.remove('hidden');
+        }
+        modalConfirmBtn.addEventListener('click', () => { if (confirmCallback) confirmCallback(); confirmationModal.classList.add('hidden'); });
+        modalCancelBtn.addEventListener('click', () => confirmationModal.classList.add('hidden'));
+
+        // --- USERNAME & AUTH ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                userId = user.uid;
+                userDocRef = doc(db, USERS_COLLECTION, userId);
+                isAuthReady = true;
+                await checkUsername();
+                loadAllData();
+            } else {
+                 try {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                } catch (error) {
+                    console.error("Authentication failed:", error);
+                }
+            }
+        });
+
+        async function checkUsername() {
+            const userDoc = await getDoc(userDocRef);
+            if (userDoc.exists() && userDoc.data().username) {
+                username = userDoc.data().username;
+                usernameDisplay.textContent = username;
+                usernameModal.classList.add('hidden');
+            } else {
+                usernameModal.classList.remove('hidden');
+            }
+        }
+
+        usernameDisplay.addEventListener('click', () => {
+            usernameInput.value = username || '';
+            usernameModal.classList.remove('hidden');
+        });
+
+        usernameForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newUsername = usernameInput.value.trim();
+            if (newUsername) {
+                await setDoc(userDocRef, { username: newUsername }, { merge: true });
+                username = newUsername;
+                usernameDisplay.textContent = username;
+                usernameModal.classList.add('hidden');
+            }
+        });
+
+        function loadAllData() {
+            if (!isAuthReady || !db) return;
+            listenToUsernames();
+            listenToPackingList();
+            listenToItemRequests();
+            listenToTravelPlans();
+        }
+        
+        // --- QR CODE LOGIC ---
+        showQrBtn.addEventListener('click', () => {
+            const qr = new QRious({
+                element: document.getElementById('qrCanvas'),
+                value: window.location.href,
+                size: 256,
+                padding: 16,
+            });
+            qrModal.classList.remove('hidden');
+        });
+        closeQrBtn.addEventListener('click', () => qrModal.classList.add('hidden'));
+
+        // --- DATA LISTENERS & RENDERING ---
+        
+        // Listen to all usernames to build a cache
+        function listenToUsernames() {
+            onSnapshot(collection(db, USERS_COLLECTION), (snapshot) => {
+                snapshot.docs.forEach(doc => {
+                    usernames[doc.id] = doc.data().username || `User...${doc.id.substring(0,4)}`;
+                });
+                // Force re-render of lists that depend on usernames
+                listenToPackingList();
+                listenToItemRequests();
+                listenToTravelPlans();
+            });
+        }
+
+        function getUserDisplayName(uid) {
+            return usernames[uid] || `User...${uid.substring(0,4)}`;
+        }
+
+        // Packing List
+        packingForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const itemName = packingItemNameInput.value.trim();
+            if (itemName && userId) {
+                await addDoc(collection(db, PACKING_COLLECTION), { name: itemName, packedBy: userId, createdAt: new Date() });
+                packingItemNameInput.value = '';
+            }
+        });
+
+        function listenToPackingList() {
+            onSnapshot(query(collection(db, PACKING_COLLECTION)), (snapshot) => {
+                packingList.innerHTML = '';
+                const docs = snapshot.docs.sort((a, b) => a.data().createdAt?.toDate() - b.data().createdAt?.toDate());
+                if (docs.length === 0) packingList.innerHTML = `<li class="text-gray-500">Nothing packed yet.</li>`;
+                docs.forEach(docSnap => {
+                    const item = docSnap.data();
+                    const li = document.createElement('li');
+                    li.className = 'flex justify-between items-center bg-gray-700 p-2 rounded-lg';
+                    li.innerHTML = `<span>${item.name}</span><div class="flex items-center gap-2"><span class="text-xs text-indigo-300">${getUserDisplayName(item.packedBy)}</span>${item.packedBy === userId ? `<button data-id="${docSnap.id}" class="delete-packing-item btn btn-danger btn-sm !p-1 !text-xs">X</button>` : ''}</div>`;
+                    packingList.appendChild(li);
+                });
+            });
+        }
+        packingList.addEventListener('click', (e) => {
+            if (e.target.classList.contains('delete-packing-item')) {
+                showConfirmationModal('Delete Item', 'Are you sure?', () => deleteDoc(doc(db, PACKING_COLLECTION, e.target.dataset.id)));
+            }
+        });
+
+        // Item Requests
+        requestForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const itemName = requestItemNameInput.value.trim();
+            if (itemName && userId) {
+                await addDoc(collection(db, REQUESTS_COLLECTION), { name: itemName, requestedBy: userId, status: 'requested', fulfilledBy: null, createdAt: new Date() });
+                requestItemNameInput.value = '';
+            }
+        });
+
+        function listenToItemRequests() {
+            onSnapshot(query(collection(db, REQUESTS_COLLECTION)), (snapshot) => {
+                requestList.innerHTML = '';
+                const docs = snapshot.docs.sort((a, b) => a.data().createdAt?.toDate() - b.data().createdAt?.toDate());
+                if (docs.length === 0) requestList.innerHTML = `<li class="text-gray-500">No requests yet.</li>`;
+                docs.forEach(docSnap => {
+                    const item = docSnap.data();
+                    const li = document.createElement('li');
+                    li.className = 'flex justify-between items-center bg-gray-700 p-2 rounded-lg';
+                    let content = `<span>${item.name} <em class="text-xs text-gray-400">(req. by ${getUserDisplayName(item.requestedBy)})</em></span>`;
+                    if (item.status === 'fulfilled') {
+                        content += `<span class="text-sm text-green-400">Brought by ${getUserDisplayName(item.fulfilledBy)}</span>`;
+                    } else {
+                        content += `<button data-id="${docSnap.id}" class="fulfill-request-item btn btn-success btn-sm !py-1 !px-2">I'll bring it!</button>`;
+                    }
+                    li.innerHTML = content;
+                    requestList.appendChild(li);
+                });
+            });
+        }
+        requestList.addEventListener('click', (e) => {
+            if (e.target.classList.contains('fulfill-request-item')) {
+                updateDoc(doc(db, REQUESTS_COLLECTION, e.target.dataset.id), { status: 'fulfilled', fulfilledBy: userId });
+            }
+        });
+
+        // Travel Plans
+        travelForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (username && userId) {
+                await setDoc(doc(db, TRAVEL_COLLECTION, userId), {
+                    name: username,
+                    arrival: travelArrivalInput.value.trim(),
+                    departure: travelDepartureInput.value.trim(),
+                    mode: travelModeInput.value.trim(),
+                    notes: travelNotesInput.value.trim(),
+                    updatedAt: new Date(),
+                    userId: userId
+                });
+            }
+        });
+
+        function listenToTravelPlans() {
+            onSnapshot(query(collection(db, TRAVEL_COLLECTION)), (snapshot) => {
+                travelPlansList.innerHTML = '';
+                const docs = snapshot.docs.sort((a, b) => a.data().updatedAt?.toDate() - b.data().updatedAt?.toDate());
+                if (docs.length === 0) travelPlansList.innerHTML = `<p class="text-gray-500">No travel plans saved yet.</p>`;
+                docs.forEach(docSnap => {
+                    const plan = docSnap.data();
+                    const div = document.createElement('div');
+                    div.className = 'bg-gray-700 p-3 rounded-lg';
+                    div.innerHTML = `<div class="flex justify-between items-start"><h4 class="font-bold text-lg text-indigo-300">${plan.name}</h4>${plan.userId === userId ? `<button data-id="${docSnap.id}" class="delete-travel-plan btn btn-danger btn-sm !p-1 !text-xs">X</button>` : ''}</div><p class="text-sm"><strong class="text-gray-400">Arrival:</strong> ${plan.arrival || 'N/A'}</p><p class="text-sm"><strong class="text-gray-400">Departure:</strong> ${plan.departure || 'N/A'}</p><p class="text-sm"><strong class="text-gray-400">Transport:</strong> ${plan.mode || 'N/A'}</p>${plan.notes ? `<p class="text-sm mt-2 pt-2 border-t border-gray-600"><strong class="text-gray-400">Notes:</strong> ${plan.notes}</p>` : ''}`;
+                    travelPlansList.appendChild(div);
+                });
+            });
+        }
+        travelPlansList.addEventListener('click', (e) => {
+            if (e.target.classList.contains('delete-travel-plan')) {
+                showConfirmationModal('Delete Plan', 'Are you sure?', () => {
+                    deleteDoc(doc(db, TRAVEL_COLLECTION, e.target.dataset.id));
+                    travelForm.reset();
+                });
+            }
+        });
+
+    </script>
+</body>
+</html>
