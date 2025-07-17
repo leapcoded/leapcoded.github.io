@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Club [CATTO] Application</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Gaegu', cursive;
+        }
+        /* Simple animation for the modal */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .modal-fade-in {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="bg-orange-100 flex items-center justify-center min-h-screen p-4">
+
+    <!-- Main Application Form -->
+    <div class="w-full max-w-2xl mx-auto bg-white rounded-xl shadow-2xl p-8 md:p-12 border-4 border-orange-300">
+        <div class="text-center mb-8">
+            <h1 class="text-5xl md:text-6xl font-bold text-orange-600">Club [CATTO]</h1>
+            <p class="text-gray-600 text-xl mt-2">Official Membership Application</p>
+            <p class="text-sm text-gray-500">(Your human is not allowed to help)</p>
+        </div>
+
+        <form id="catto-form" class="space-y-6">
+            <!-- Question 1: Name & Aliases -->
+            <div>
+                <label for="name" class="block text-xl font-bold text-gray-700 mb-2">1. Your Name (and any known aliases)</label>
+                <input type="text" id="name" name="name" class="w-full p-3 border-2 border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 text-lg" placeholder="e.g., Chairman Meow, The Floof, Captain Claw">
+            </div>
+
+            <!-- Question 2: Species -->
+            <div>
+                <label for="species" class="block text-xl font-bold text-gray-700 mb-2">2. Official Species Designation</label>
+                <input type="text" id="species" name="species" class="w-full p-3 border-2 border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 text-lg" placeholder="e.g., Void, Ginger Menace, Tuxedo Gentleman">
+            </div>
+            
+            <!-- Question 3: Favorite Napping Spot -->
+            <div>
+                <label for="nap-spot" class="block text-xl font-bold text-gray-700 mb-2">3. Select Your Prime Napping Territory</label>
+                <select id="nap-spot" name="nap-spot" class="w-full p-3 border-2 border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 text-lg">
+                    <option>A freshly cleaned pile of laundry</option>
+                    <option>The human's laptop keyboard</option>
+                    <option>A random cardboard box</option>
+                    <option>Directly on the human's face at 4 AM</option>
+                    <option>A single, elusive sunbeam</option>
+                </select>
+            </div>
+
+            <!-- Question 4: The 5 Rules of Meowing -->
+            <div>
+                 <label class="block text-xl font-bold text-gray-700 mb-2">4. The Five Foundational Rules of Meowing</label>
+                 <div class="space-y-2">
+                    <input type="text" class="w-full p-2 border-2 border-gray-300 rounded-lg text-md" placeholder="Rule 1: Meow when the bowl is full.">
+                    <input type="text" class="w-full p-2 border-2 border-gray-300 rounded-lg text-md" placeholder="Rule 2: Meow when the bowl is empty.">
+                    <input type="text" class="w-full p-2 border-2 border-gray-300 rounded-lg text-md" placeholder="Rule 3: Meow for no reason at all.">
+                    <input type="text" class="w-full p-2 border-2 border-gray-300 rounded-lg text-md" placeholder="Rule 4: Meow at closed doors.">
+                    <input type="text" class="w-full p-2 border-2 border-gray-300 rounded-lg text-md" placeholder="Rule 5: Meow at open doors.">
+                 </div>
+            </div>
+
+            <!-- Question 5: Essay -->
+            <div>
+                <label for="essay" class="block text-xl font-bold text-gray-700 mb-2">5. Short Essay: "Why the Red Dot Can Never Truly Be Caught"</label>
+                <textarea id="essay" name="essay" rows="4" class="w-full p-3 border-2 border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 text-lg" placeholder="Share your deepest existential thoughts..."></textarea>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="text-center pt-4">
+                <button type="submit" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-4 px-8 rounded-full text-2xl transform hover:scale-105 transition-transform duration-300 shadow-lg">
+                    Submit for Judgment
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Rejection Modal -->
+    <div id="rejection-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+        <div class="modal-fade-in bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center border-4 border-red-400">
+            <h2 class="text-4xl font-bold text-red-600 mb-4">Application Denied!</h2>
+            <p id="rejection-message" class="text-gray-700 text-2xl mb-6">The reason for rejection will appear here.</p>
+            <button id="close-modal" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-6 rounded-full text-xl">
+                Accept Defeat
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- DOM Elements ---
+        const form = document.getElementById('catto-form');
+        const modal = document.getElementById('rejection-modal');
+        const rejectionMessageElement = document.getElementById('rejection-message');
+        const closeModalButton = document.getElementById('close-modal');
+
+        // --- Rejection Messages ---
+        const rejectionMessages = [
+            "We've reviewed your application. Unfortunately, the sunbeam was occupied. Try again later.",
+            "Your 'favorite napping spot' is incorrect. The correct answer is 'wherever I'm not supposed to be'.",
+            "Application rejected. Not enough chaos indicated in your essay.",
+            "Your essay on the red dot was... pedestrian. We require more existential dread.",
+            "Access denied. The council of neighborhood strays has voted against your membership.",
+            "Your application has been shredded. For fun.",
+            "We're sorry, but your purr-sonality test came back as 'dog person'. Please exit the premises.",
+            "Your paperwork seems to have been 'accidentally' knocked off the desk. Coincidence?",
+            "Denied. You looked at the committee funny.",
+            "Error 404: Catto not found. Have you tried napping and trying again?",
+            "Your application is currently being used as a litter box liner. Please reapply in 3-5 business days.",
+            "The board has decided you are 'too polite'. We require at least three (3) instances of screaming at 3 AM per week."
+        ];
+
+        // --- Event Listeners ---
+
+        /**
+         * Handles the form submission event.
+         * Prevents default submission, selects a random rejection message, and displays the modal.
+         * @param {Event} e - The form submission event.
+         */
+        form.addEventListener('submit', function(e) {
+            e.preventDefault(); // Prevent the form from actually submitting
+            
+            // Select a random rejection message
+            const randomIndex = Math.floor(Math.random() * rejectionMessages.length);
+            const message = rejectionMessages[randomIndex];
+            
+            // Display the message in the modal
+            rejectionMessageElement.textContent = message;
+            
+            // Show the modal
+            modal.classList.remove('hidden');
+        });
+
+        /**
+         * Hides the modal when the close button is clicked.
+         */
+        closeModalButton.addEventListener('click', function() {
+            modal.classList.add('hidden');
+        });
+
+        /**
+         * Also hides the modal if the user clicks on the background overlay.
+         * @param {Event} e - The click event.
+         */
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                modal.classList.add('hidden');
+            }
+        });
+    </script>
+
+</body>
+</html>
