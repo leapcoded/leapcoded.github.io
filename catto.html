@@ -61,11 +61,11 @@
             <div>
                  <label class="block text-xl font-bold text-gray-700 mb-2">4. The Five Foundational Rules of Meowing</label>
                  <div class="space-y-2">
-                    <input type="text" class="w-full p-2 border-2 border-gray-300 rounded-lg text-md" placeholder="Rule 1: ">
-                    <input type="text" class="w-full p-2 border-2 border-gray-300 rounded-lg text-md" placeholder="Rule 2: ">
-                    <input type="text" class="w-full p-2 border-2 border-gray-300 rounded-lg text-md" placeholder="Rule 3: ">
-                    <input type="text" class="w-full p-2 border-2 border-gray-300 rounded-lg text-md" placeholder="Rule 4: ">
-                    <input type="text" class="w-full p-2 border-2 border-gray-300 rounded-lg text-md" placeholder="Rule 5: ">
+                    <input type="text" class="w-full p-2 border-2 border-gray-300 rounded-lg text-md" placeholder="Rule 1: Meow when the bowl is full.">
+                    <input type="text" class="w-full p-2 border-2 border-gray-300 rounded-lg text-md" placeholder="Rule 2: Meow when the bowl is empty.">
+                    <input type="text" class="w-full p-2 border-2 border-gray-300 rounded-lg text-md" placeholder="Rule 3: Meow for no reason at all.">
+                    <input type="text" class="w-full p-2 border-2 border-gray-300 rounded-lg text-md" placeholder="Rule 4: Meow at closed doors.">
+                    <input type="text" class="w-full p-2 border-2 border-gray-300 rounded-lg text-md" placeholder="Rule 5: Meow at open doors.">
                  </div>
             </div>
 
@@ -89,8 +89,19 @@
         <div class="modal-fade-in bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center border-4 border-red-400">
             <h2 class="text-4xl font-bold text-red-600 mb-4">Application Denied!</h2>
             <p id="rejection-message" class="text-gray-700 text-2xl mb-6">The reason for rejection will appear here.</p>
-            <button id="close-modal" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-6 rounded-full text-xl">
+            <button id="close-rejection-modal" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-6 rounded-full text-xl">
                 Accept Defeat
+            </button>
+        </div>
+    </div>
+
+    <!-- Acceptance Modal -->
+    <div id="acceptance-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 hidden">
+        <div class="modal-fade-in bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center border-4 border-yellow-400">
+            <h2 class="text-4xl font-bold text-yellow-600 mb-4">Application Accepted!</h2>
+            <p class="text-gray-700 text-2xl mb-6">The committee recognizes your keyboard-walking signature. Welcome to the club. The first meeting is whenever you wake up from your nap.</p>
+            <button id="close-acceptance-modal" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-6 rounded-full text-xl">
+                Claim Victory
             </button>
         </div>
     </div>
@@ -98,9 +109,14 @@
     <script>
         // --- DOM Elements ---
         const form = document.getElementById('catto-form');
-        const modal = document.getElementById('rejection-modal');
+        const nameInput = document.getElementById('name');
+        
+        const rejectionModal = document.getElementById('rejection-modal');
         const rejectionMessageElement = document.getElementById('rejection-message');
-        const closeModalButton = document.getElementById('close-modal');
+        const closeRejectionModalButton = document.getElementById('close-rejection-modal');
+
+        const acceptanceModal = document.getElementById('acceptance-modal');
+        const closeAcceptanceModalButton = document.getElementById('close-acceptance-modal');
 
         // --- Rejection Messages ---
         const rejectionMessages = [
@@ -115,7 +131,7 @@
             "Denied. You looked at the committee funny.",
             "Error 404: Catto not found. Have you tried napping and trying again?",
             "Your application is currently being used as a litter box liner. Please reapply in 3-5 business days.",
-            "The board has decided you are 'too polite'. We require at least three (3) instances of screaming at 3 AM per week.", // << THE MISSING COMMA WAS ADDED HERE!
+            "The board has decided you are 'too polite'. We require at least three (3) instances of screaming at 3 AM per week.",
             "Your biscuit-making technique is amateur. We require professional bakers.",
             "Application denied. You failed the mandatory 'fit in an impossibly small box' test.",
             "We detected a hint of dog-smell on this application. It has been incinerated.",
@@ -172,37 +188,42 @@
 
         /**
          * Handles the form submission event.
-         * Prevents default submission, selects a random rejection message, and displays the modal.
-         * @param {Event} e - The form submission event.
+         * Checks for the secret name. If it matches, shows the acceptance modal.
+         * Otherwise, shows a random rejection.
          */
         form.addEventListener('submit', function(e) {
             e.preventDefault(); // Prevent the form from actually submitting
             
-            // Select a random rejection message
-            const randomIndex = Math.floor(Math.random() * rejectionMessages.length);
-            const message = rejectionMessages[randomIndex];
-            
-            // Display the message in the modal
-            rejectionMessageElement.textContent = message;
-            
-            // Show the modal
-            modal.classList.remove('hidden');
+            // The secret key to acceptance: a cat walking on the keyboard.
+            if (nameInput.value.toLowerCase().trim() === 'asdfghjkl') {
+                acceptanceModal.classList.remove('hidden');
+            } else {
+                // Select a random rejection message
+                const randomIndex = Math.floor(Math.random() * rejectionMessages.length);
+                const message = rejectionMessages[randomIndex];
+                
+                // Display the message in the modal
+                rejectionMessageElement.textContent = message;
+                
+                // Show the modal
+                rejectionModal.classList.remove('hidden');
+            }
         });
 
-        /**
-         * Hides the modal when the close button is clicked.
-         */
-        closeModalButton.addEventListener('click', function() {
-            modal.classList.add('hidden');
-        });
+        // --- Modal Closing Logic ---
 
-        /**
-         * Also hides the modal if the user clicks on the background overlay.
-         * @param {Event} e - The click event.
-         */
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) {
-                modal.classList.add('hidden');
+        closeRejectionModalButton.addEventListener('click', () => rejectionModal.classList.add('hidden'));
+        closeAcceptanceModalButton.addEventListener('click', () => acceptanceModal.classList.add('hidden'));
+
+        rejectionModal.addEventListener('click', function(e) {
+            if (e.target === rejectionModal) {
+                rejectionModal.classList.add('hidden');
+            }
+        });
+        
+        acceptanceModal.addEventListener('click', function(e) {
+            if (e.target === acceptanceModal) {
+                acceptanceModal.classList.add('hidden');
             }
         });
     </script>
