@@ -1,0 +1,1385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lobe Ledger</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #f0f2f5;
+            --bg-secondary: #ffffff;
+            --bg-accent: #f0f9ff;
+            --text-primary: #1f2937;
+            --text-secondary: #4b5563;
+            --text-accent: #075985;
+            --border-accent: #bae6fd;
+            --brand-primary: #4f46e5;
+            --brand-primary-hover: #4338ca;
+            --brand-secondary: #6366f1;
+            --log-border: #4f46e5;
+            --danger-primary: #dc2626;
+            --danger-primary-hover: #b91c1c;
+            --success-primary: #16a34a;
+        }
+
+        .theme-sunset {
+            --bg-primary: #fef3c7;
+            --bg-secondary: #fffbeb;
+            --bg-accent: #fff7ed;
+            --text-primary: #78350f;
+            --text-secondary: #9a3412;
+            --text-accent: #9a3412;
+            --border-accent: #fed7aa;
+            --brand-primary: #f97316;
+            --brand-primary-hover: #ea580c;
+            --brand-secondary: #fb923c;
+            --log-border: #f97316;
+        }
+
+        .theme-forest {
+            --bg-primary: #ecfdf5;
+            --bg-secondary: #f0fdf4;
+            --bg-accent: #f0fdfa;
+            --text-primary: #14532d;
+            --text-secondary: #166534;
+            --text-accent: #065f46;
+            --border-accent: #a7f3d0;
+            --brand-primary: #16a34a;
+            --brand-primary-hover: #15803d;
+            --brand-secondary: #22c55e;
+            --log-border: #16a34a;
+        }
+        
+        .theme-pride {
+            --bg-primary: #f3f4f6;
+            --bg-secondary: #ffffff;
+            --bg-accent: #fce7f3;
+            --text-primary: #111827;
+            --text-secondary: #4b5563;
+            --text-accent: #be185d;
+            --border-accent: #fbcfe8;
+            --brand-primary: #db2777;
+            --brand-primary-hover: #be185d;
+            --brand-secondary: #f472b6;
+            --log-border: #db2777;
+        }
+
+        .theme-galaxy {
+            --bg-primary: #111827;
+            --bg-secondary: #1f2937;
+            --bg-accent: #374151;
+            --text-primary: #f9fafb;
+            --text-secondary: #d1d5db;
+            --text-accent: #e5e7eb;
+            --border-accent: #4b5563;
+            --brand-primary: #8b5cf6;
+            --brand-primary-hover: #7c3aed;
+            --brand-secondary: #a78bfa;
+            --log-border: #8b5cf6;
+        }
+
+        .theme-ocean {
+            --bg-primary: #e0f2fe;
+            --bg-secondary: #f0f9ff;
+            --bg-accent: #e0f2fe;
+            --text-primary: #0c4a6e;
+            --text-secondary: #075985;
+            --text-accent: #0369a1;
+            --border-accent: #7dd3fc;
+            --brand-primary: #0ea5e9;
+            --brand-primary-hover: #0284c7;
+            --brand-secondary: #38bdf8;
+            --log-border: #0ea5e9;
+        }
+
+        .theme-cherry-blossom {
+            --bg-primary: #fef2f2;
+            --bg-secondary: #fff1f2;
+            --bg-accent: #fce7f3;
+            --text-primary: #881337;
+            --text-secondary: #9f1239;
+            --text-accent: #be185d;
+            --border-accent: #fbcfe8;
+            --brand-primary: #e11d48;
+            --brand-primary-hover: #be123c;
+            --brand-secondary: #f472b6;
+            --log-border: #e11d48;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .card {
+            background-color: var(--bg-secondary);
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: box-shadow 0.3s ease-in-out, background-color 0.3s, transform 0.2s;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        .card:hover { transform: translateY(-3px); }
+        .btn-primary {
+            background-color: var(--brand-primary);
+            color: white;
+            transition: background-color 0.2s;
+        }
+        .btn-primary:hover {
+            background-color: var(--brand-primary-hover);
+        }
+        .btn-danger {
+            background-color: var(--danger-primary);
+            color: white;
+            transition: background-color 0.2s;
+        }
+         .btn-danger:hover {
+            background-color: var(--danger-primary-hover);
+        }
+        .log-entry {
+            border-left: 4px solid var(--log-border);
+        }
+        .log-entry-downsize { border-left-color: var(--danger-primary); }
+        .log-entry-maintenance { border-left-color: var(--text-secondary); }
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 50; transition: opacity 0.3s ease;
+        }
+        .modal-content {
+            background: var(--bg-secondary);
+            padding: 2rem; border-radius: 0.5rem;
+            max-width: 90%; width: 500px;
+            max-height: 90vh; overflow-y: auto;
+        }
+        .progress-bar-bg { background-color: #e5e7eb; }
+        .theme-galaxy .progress-bar-bg { background-color: #4b5563; }
+        .progress-bar-fill { background-color: var(--brand-secondary); transition: width 0.5s ease-in-out; }
+        
+        .tab-link {
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            border-bottom: 2px solid transparent;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+        }
+        .tab-link:hover { color: var(--text-primary); }
+        .tab-link.active {
+            border-bottom-color: var(--brand-primary);
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+        .sub-tab-link {
+            cursor: pointer;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            background-color: var(--bg-primary);
+            color: var(--text-secondary);
+            transition: all 0.2s;
+        }
+        .sub-tab-link.active {
+            background-color: var(--brand-secondary);
+            color: white;
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.5s ease-in-out; }
+        
+        #theme-switcher {
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            border-radius: 0.5rem;
+            padding: 0.25rem 0.5rem;
+            border: 1px solid var(--border-accent);
+        }
+
+        .theme-galaxy input, .theme-galaxy select, .theme-galaxy textarea {
+            background-color: #374151;
+            border-color: #4b5563;
+        }
+
+        .achievement-card {
+            opacity: 0.5;
+            filter: grayscale(80%);
+            transition: all 0.3s;
+        }
+        .achievement-card.unlocked {
+            opacity: 1;
+            filter: grayscale(0%);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="antialiased text-gray-800 theme-default">
+
+    <div id="app" class="container mx-auto p-4 md:p-6 lg:p-8 max-w-4xl">
+        
+        <header class="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
+            <div class="text-center sm:text-left">
+                <h1 class="text-4xl font-bold" style="color: var(--text-primary);">Lobe Ledger</h1>
+                <p id="welcome-message" class="mt-2" style="color: var(--text-secondary);">Your personal and secure stretching log.</p>
+                <p id="quote-message" class="text-sm italic mt-1" style="color: var(--text-accent);"></p>
+            </div>
+            <div class="flex items-center gap-4">
+                 <select id="theme-switcher">
+                    <option value="default">Default</option>
+                    <option value="sunset">Sunset</option>
+                    <option value="forest">Forest</option>
+                    <option value="pride">Pride</option>
+                    <option value="galaxy">Galaxy</option>
+                    <option value="ocean">Ocean</option>
+                    <option value="cherry-blossom">Cherry Blossom</option>
+                </select>
+                <div id="auth-container" class="text-right">
+                    <button id="sign-in-btn" class="btn-primary font-bold py-2 px-4 rounded-md flex items-center gap-2">
+                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C12.955 4 4 12.955 4 24s8.955 20 20 20s20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/><path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.222 0-9.618-3.67-11.083-8.584l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-.792 2.447-2.274 4.481-4.244 5.875l6.19 5.238C42.012 35.845 44 30.137 44 24c0-1.341-.138-2.65-.389-3.917z"/></svg>
+                        Sign in
+                    </button>
+                    <div id="user-info" class="hidden items-center gap-3">
+                        <img id="user-photo" class="w-10 h-10 rounded-full" src="" alt="User photo">
+                        <div>
+                            <p id="user-name" class="font-semibold"></p>
+                            <button id="sign-out-btn" class="text-sm text-red-500 hover:underline">Sign out</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div id="content-area" class="opacity-50 pointer-events-none">
+            
+            <div class="border-b border-gray-200 mb-6">
+                <nav class="-mb-px flex justify-center space-x-2 sm:space-x-6 text-sm sm:text-base flex-wrap">
+                    <a class="tab-link active" data-tab="dashboard">Dashboard</a>
+                    <a class="tab-link" data-tab="stats">Stats</a>
+                    <a class="tab-link" data-tab="gallery">Gallery</a>
+                    <a class="tab-link" data-tab="inventory">Jewelry</a>
+                    <a class="tab-link" data-tab="achievements">Achievements</a>
+                    <a class="tab-link" data-tab="info">Info</a>
+                    <a class="tab-link" data-tab="settings">Settings</a>
+                </nav>
+            </div>
+
+            <div id="dashboard-content" class="tab-content active">
+                 <div id="reminder-card" class="hidden card p-4 mb-8" style="background-color: var(--success-primary);">
+                    <p class="font-bold text-white text-center">🎉 It's time! You've healed and can consider your next stretch.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="card p-6">
+                        <h2 class="text-xl font-semibold mb-3" style="color: var(--text-secondary);">Current Status</h2>
+                        <div class="space-y-2">
+                            <p><strong>Last Size:</strong> <span id="current-size">N/A</span></p>
+                            <p><strong>Last Stretched On:</strong> <span id="last-stretch-date">N/A</span></p>
+                            <p><strong>Next Stretch Date:</strong> <span id="next-stretch-date">N/A</span></p>
+                        </div>
+                    </div>
+                    <div class="card p-6">
+                        <h2 class="text-xl font-semibold mb-3" style="color: var(--text-secondary);">Goal Progress</h2>
+                        <div class="flex items-center gap-3 mb-2">
+                            <input type="text" id="goal-size-input" placeholder="e.g., 10mm" class="w-full p-2 border border-gray-300 rounded-md shadow-sm">
+                            <button id="set-goal-btn" class="btn-primary font-bold py-2 px-4 rounded-md">Set</button>
+                        </div>
+                        <div class="progress-bar-bg w-full h-4 rounded-full overflow-hidden">
+                            <div id="progress-bar" class="progress-bar-fill h-full" style="width: 0%;"></div>
+                        </div>
+                        <p id="progress-text" class="text-sm text-center mt-1" style="color: var(--text-secondary);">Set a goal to see your progress!</p>
+                    </div>
+                </div>
+                <div class="card p-6 mb-8">
+                    <h2 class="text-2xl font-bold mb-4">Log a New Entry</h2>
+                    <form id="stretch-form">
+                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="stretch-date" class="block text-sm font-medium mb-1">Date</label>
+                                <input type="date" id="stretch-date" class="w-full p-2 border border-gray-300 rounded-md" required>
+                            </div>
+                            <div>
+                                <label for="log-type" class="block text-sm font-medium mb-1">Log Type</label>
+                                <select id="log-type" class="w-full p-2 border border-gray-300 rounded-md">
+                                    <option value="stretch-up">Stretch Up</option>
+                                    <option value="downsize">Downsize</option>
+                                    <option value="maintenance">Maintenance</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="stretch-size" class="block text-sm font-medium mb-1">Current Size (mm or g)</label>
+                                <input type="text" id="stretch-size" placeholder="e.g., 1.6mm / 14g" class="w-full p-2 border border-gray-300 rounded-md" required>
+                            </div>
+                            <div>
+                                <label for="jewelry-material" class="block text-sm font-medium mb-1">Jewelry Material</label>
+                                <input type="text" id="jewelry-material" placeholder="e.g., Glass, Steel" class="w-full p-2 border border-gray-300 rounded-md">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label for="irritation-level" class="block text-sm font-medium mb-1">Irritation Level (1=None, 5=Severe)</label>
+                                <input type="range" id="irritation-level" min="1" max="5" value="1" class="w-full">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label for="stretch-notes" class="block text-sm font-medium mb-1">Notes</label>
+                                <textarea id="stretch-notes" rows="3" placeholder="How did it feel? Any issues?" class="w-full p-2 border border-gray-300 rounded-md"></textarea>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label for="stretch-photo" class="block text-sm font-medium mb-1">Add Photo</label>
+                                <input type="file" id="stretch-photo" name="stretch-photo" accept="image/*" class="w-full text-sm">
+                            </div>
+                        </div>
+                        <div class="mt-6 flex justify-end">
+                            <button type="submit" id="log-stretch-btn" class="btn-primary font-bold py-2 px-6 rounded-md">Log Entry</button>
+                        </div>
+                    </form>
+                </div>
+                <div id="log-container"></div>
+            </div>
+            <div id="stats-content" class="tab-content">
+                 <h2 class="text-3xl font-bold mb-6 text-center">Your Journey Stats</h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                    <div class="card p-4 text-center">
+                        <p class="text-2xl font-bold" id="stats-total-stretches">0</p>
+                        <p class="text-sm" style="color: var(--text-secondary);">Total Stretches</p>
+                    </div>
+                    <div class="card p-4 text-center">
+                        <p class="text-2xl font-bold" id="stats-avg-time">N/A</p>
+                        <p class="text-sm" style="color: var(--text-secondary);">Avg. Wait Time</p>
+                    </div>
+                    <div class="card p-4 text-center">
+                        <p class="text-2xl font-bold" id="stats-fav-material">N/A</p>
+                        <p class="text-sm" style="color: var(--text-secondary);">Favorite Material</p>
+                    </div>
+                     <div class="card p-4 text-center">
+                        <p class="text-2xl font-bold" id="stats-longest-wait">N/A</p>
+                        <p class="text-sm" style="color: var(--text-secondary);">Longest Wait</p>
+                    </div>
+                </div>
+                <h2 class="text-3xl font-bold mb-6 text-center">Timeline</h2>
+                <div id="timeline-container" class="relative pl-4 border-l-4" style="border-color: var(--log-border);"></div>
+            </div>
+            <div id="gallery-content" class="tab-content"></div>
+            <div id="inventory-content" class="tab-content"></div>
+            <div id="achievements-content" class="tab-content"></div>
+            <div id="info-content" class="tab-content">
+                 <div class="space-y-8">
+                    <div class="card p-6">
+                        <h2 class="text-2xl font-bold mb-4">How Do I Begin Stretching?</h2>
+                        <div class="space-y-4">
+                            <div>
+                                <h3 class="font-bold">Large Gauge Initial Piercing</h3>
+                                <p class="text-sm">This method involves talking to your professional piercer about using a hollowed-out needle to pierce you at a size larger than a standard earring. This can be done safely up to 2g and can cut an entire year off your stretching journey! Just remember, it is important to let your lobes fully heal (6+ months!) before starting to stretch. We do not recommend the surgical punch method, as it removes skin essential to continuing to stretch.</p>
+                            </div>
+                            <div>
+                                <h3 class="font-bold">Dead Stretching</h3>
+                                <p class="text-sm">This method involves the use of single flare glass or titanium plugs to gradually increase the size of your lobes. Waiting longer periods of time and using the weight of the jewelry naturally stretches/loosens up your lobes to avoid overstretching, blowouts, and tears. Stretching is NOT supposed to hurt. If it hurts, it is not ready. You should see at least a small gap between your lobe and jewelry before moving up.</p>
+                            </div>
+                             <div>
+                                <h3 class="font-bold">Initial Piercing Sizes</h3>
+                                <p class="text-sm">Standard ear lobe piercings are between 20g-16g. It is important not to skip sizes. If you are starting at 18-20g, it’s recommended to insert and heal 16g titanium labrets, plugs, or CBRs before moving on to 14g.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card p-6">
+                        <h2 class="text-2xl font-bold mb-4">Recommended Wait Times</h2>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead class="border-b-2"><tr><th class="p-2">Size Transition (mm)</th><th class="p-2">Minimum Wait</th></tr></thead>
+                                <tbody>
+                                    <tr class="border-b"><td class="p-2">Fresh Piercing</td><td class="p-2">6+ months</td></tr>
+                                    <tr class="border-b"><td class="p-2">1.6mm - 2mm (14g - 12g)</td><td class="p-2">1.5+ months</td></tr>
+                                    <tr class="border-b"><td class="p-2">2mm - 2.5mm (12g - 10g)</td><td class="p-2">1.5+ months</td></tr>
+                                    <tr class="border-b"><td class="p-2">2.5mm - 3.2mm (10g - 8g)</td><td class="p-2">2-3+ months</td></tr>
+                                    <tr class="border-b"><td class="p-2">3.2mm - 4mm (8g - 6g)</td><td class="p-2">2-3+ months</td></tr>
+                                    <tr class="border-b"><td class="p-2">4mm - 5mm (6g - 4g)</td><td class="p-2">4-6+ months</td></tr>
+                                    <tr class="border-b"><td class="p-2">5mm - 6mm (4g - 2g)</td><td class="p-2">4-6+ months</td></tr>
+                                    <tr class="border-b"><td class="p-2">6mm - 7mm (2g - 1g)</td><td class="p-2">4-6+ months</td></tr>
+                                    <tr class="border-b"><td class="p-2">7mm - 8mm (1g - 0g)</td><td class="p-2">4-6+ months</td></tr>
+                                    <tr><td class="p-2">8mm - 10mm (0g - 00g)</td><td class="p-2">4-6+ months</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                         <p class="text-xs mt-2" style="color: var(--text-secondary);">*Note: Some plugs may vary in size ±1mm. Using digital calipers to measure in millimeters is the most accurate method.</p>
+                    </div>
+                     <div class="card p-6">
+                        <h2 class="text-2xl font-bold mb-4">Stretching Methods to Avoid</h2>
+                        <div class="space-y-4">
+                            <div>
+                                <h3 class="font-bold" style="color: var(--danger-primary);">Tapers</h3>
+                                <p class="text-sm">Tapers are tools for guiding jewelry, not for stretching. They encourage stretching too quickly and can easily cause tears, blowouts, and uneven lobes due to their steep incline and poor weight distribution.</p>
+                            </div>
+                            <div>
+                                <h3 class="font-bold" style="color: var(--danger-primary);">Taping Method</h3>
+                                <p class="text-sm">There are no body-compatible tapes. Tape is porous, traps bacteria, and can fuse to unhealed skin. It's impossible to replicate the exact same wrap thickness daily, leading to inconsistent sizing and potential damage.</p>
+                            </div>
+                        </div>
+                    </div>
+                     <div class="card p-6">
+                        <h2 class="text-2xl font-bold mb-4">Jewelry Materials Explained</h2>
+                        <div class="space-y-4 text-sm">
+                            <h3 class="font-bold" style="color: var(--success-primary);">Best for Stretching</h3>
+                            <p><strong>Glass, Implant Grade Titanium, Niobium:</strong> These are the safest materials. They are non-porous, smooth, and biocompatible, minimizing risk of irritation.</p>
+                            
+                            <h3 class="font-bold">For Healed Lobes Only</h3>
+                            <p><strong>Surgical Steel:</strong> A common budget option, but may contain nickel, a common allergen. Ensure lobes are fully healed.</p>
+                            <p><strong>Natural Materials (Wood, Stone, Horn):</strong> Aesthetically pleasing but porous. They trap bacteria and should only be worn in well-healed piercings.</p>
+                             <p><strong>Silicone:</strong> High-grade silicone is great for healed lobes but should never be used to stretch as it's porous and can fuse to healing skin.</p>
+                            <p><strong>Stone Exceptions:</strong> Quartz, Rose Quartz, Amethyst, and Obsidian can be used for stretching as their structure is like glass. Opalite and Goldstone are man-made glass.</p>
+
+                            <h3 class="font-bold" style="color: var(--danger-primary);">Never Use to Stretch</h3>
+                            <p><strong>Acrylic:</strong> A porous plastic that can easily scratch, trap bacteria, and cause severe irritation or infection.</p>
+                            <p><strong>Double Flared Jewelry:</strong> The flares are 1-2mm larger than the wearable area, forcing a stretch that can cause severe tears and blowouts.</p>
+                            <p><strong>Weights and Hangers:</strong> These are for decorative, short-term wear in healed lobes only. Their uneven weight distribution will cause thinning and potential tearing.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="settings-content" class="tab-content">
+                <h2 class="text-3xl font-bold mb-6 text-center">Settings</h2>
+                <div class="card p-6 max-w-md mx-auto">
+                    <div class="space-y-4">
+                        <div>
+                            <h3 class="font-semibold mb-2">Data Management</h3>
+                            <p class="text-sm mb-2" style="color: var(--text-secondary);">Export your data for a local backup, or import data from another device. This is how you can move between a local version and this cloud-synced version.</p>
+                            <div class="flex gap-4">
+                                <button id="export-data-btn" class="btn-primary w-full py-2 rounded-md">Export Data</button>
+                                <button id="import-data-btn" class="w-full py-2 rounded-md border" style="color: var(--text-secondary);">Import Data</button>
+                                <input type="file" id="import-file-input" class="hidden" accept=".json">
+                            </div>
+                        </div>
+                         <div>
+                            <h3 class="font-semibold mb-2">Reminders</h3>
+                            <div class="flex items-center justify-between">
+                                <p class="text-sm" style="color: var(--text-secondary);">Show "Ready to Stretch" reminder on dashboard</p>
+                                <input type="checkbox" id="reminder-toggle" class="h-6 w-11 rounded-full" checked>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="main-modal" class="modal-overlay hidden"></div>
+
+    <script type="module">
+        // IMPORTANT: Run from a web server (like VS Code's "Live Server").
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, onSnapshot, orderBy, serverTimestamp, doc, updateDoc, deleteDoc, getDoc, setDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+
+        // --- SECTION 3: FIREBASE & APP INITIALIZATION ---
+        // TODO: Replace with your own Firebase project configuration
+        const firebaseConfig = {
+        apiKey: "AIzaSyB3LsKkKZGwCCNyRvDeO-CAICe0aYmEKuQ",
+        authDomain: "my-stretching-tracker.firebaseapp.com",
+        projectId: "my-stretching-tracker",
+        storageBucket: "my-stretching-tracker.firebasestorage.app",
+        messagingSenderId: "975152398329",
+        appId: "1:975152398329:web:ec38fff174b7847a630728"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
+
+        let userId = null;
+        let unsubscribeLogs, unsubscribeJewelry, unsubscribeSettings, unsubscribeWishlist;
+        let allLogs = [], allJewelry = [], allWishlistItems = [];
+        let userSettings = {};
+
+        const quotes = [
+            "Patience is the most important tool you have.",
+            "Listen to your body; it knows best.",
+            "Slow and steady wins the race.",
+            "Healthy lobes are happy lobes.",
+            "Your body is a canvas, not a race track.",
+            "Some people hang their art on walls. I choose to wear mine.",
+            "My body is my home, and I am the one who gets to decorate it.",
+            "We don't just change our bodies; we evolve them. We become a truer version of ourselves with every piece."
+        ];
+        
+        const achievements = {
+            firstStep: { title: "First Step", description: "Log your very first stretch.", unlocked: false, icon: "🚀" },
+            patience: { title: "Patience is a Virtue", description: "Wait over 60 days between stretches.", unlocked: false, icon: "⏳" },
+            size8mm: { title: "Made it to 0g", description: "Reach the 8mm (0g) milestone.", unlocked: false, icon: "🎯" },
+            collector: { title: "Collector", description: "Log 5 pieces of jewelry in your inventory.", unlocked: false, icon: "💎" },
+            photographer: { title: "Photographer", description: "Upload 5 photos to your logs.", unlocked: false, icon: "📸" },
+            oneYear: { title: "One Year Strong", description: "Log entries over a period of one year.", unlocked: false, icon: "🗓️" },
+            wishful: { title: "Wishful Thinker", description: "Add an item to your wishlist.", unlocked: false, icon: "🌟" }
+        };
+
+        // UI Elements
+        const signInBtn = document.getElementById('sign-in-btn');
+        const signOutBtn = document.getElementById('sign-out-btn');
+        const contentArea = document.getElementById('content-area');
+        const stretchForm = document.getElementById('stretch-form');
+        const goalSizeInput = document.getElementById('goal-size-input');
+        const setGoalBtn = document.getElementById('set-goal-btn');
+        const mainModal = document.getElementById('main-modal');
+        const themeSwitcher = document.getElementById('theme-switcher');
+        const exportBtn = document.getElementById('export-data-btn');
+        const importBtn = document.getElementById('import-data-btn');
+        const importFileInput = document.getElementById('import-file-input');
+        const reminderToggle = document.getElementById('reminder-toggle');
+        const quoteMessage = document.getElementById('quote-message');
+
+        // --- SECTION 4: CORE LOGIC & DATA MANAGEMENT ---
+
+        onAuthStateChanged(auth, user => {
+            const welcomeMessage = document.getElementById('welcome-message');
+            if (user) {
+                welcomeMessage.textContent = `Welcome back, ${user.displayName.split(' ')[0]}!`;
+                quoteMessage.textContent = `"${quotes[Math.floor(Math.random() * quotes.length)]}"`;
+                document.getElementById('user-name').textContent = user.displayName;
+                document.getElementById('user-photo').src = user.photoURL;
+                document.getElementById('user-info').classList.remove('hidden');
+                document.getElementById('user-info').classList.add('flex');
+                signInBtn.classList.add('hidden');
+                contentArea.classList.remove('opacity-50', 'pointer-events-none');
+                document.getElementById('log-stretch-btn').disabled = false;
+                
+                userId = user.uid;
+                fetchAllData();
+            } else {
+                welcomeMessage.textContent = 'Your personal and secure stretching log.';
+                quoteMessage.textContent = '';
+                document.getElementById('user-info').classList.add('hidden');
+                signInBtn.classList.remove('hidden');
+                contentArea.classList.add('opacity-50', 'pointer-events-none');
+                document.getElementById('log-stretch-btn').disabled = true;
+
+                userId = null;
+                if (unsubscribeLogs) unsubscribeLogs();
+                if (unsubscribeJewelry) unsubscribeJewelry();
+                if (unsubscribeSettings) unsubscribeSettings();
+                if (unsubscribeWishlist) unsubscribeWishlist();
+                clearAllData();
+            }
+        });
+
+        const fetchAllData = () => {
+            fetchSettings();
+            fetchLogs();
+            fetchJewelry();
+            fetchWishlist();
+        };
+        
+        const init = () => {
+            document.getElementById('stretch-date').valueAsDate = new Date();
+            signInBtn.addEventListener('click', () => signInWithPopup(auth, new GoogleAuthProvider()));
+            signOutBtn.addEventListener('click', () => signOut(auth));
+            setGoalBtn.addEventListener('click', handleSetGoal);
+            stretchForm.addEventListener('submit', handleLogSubmit);
+            exportBtn.addEventListener('click', exportData);
+            importBtn.addEventListener('click', () => importFileInput.click());
+            importFileInput.addEventListener('change', importData);
+            reminderToggle.addEventListener('change', handleReminderToggle);
+
+            // --- MISSING CODE ADDED HERE ---
+            setupTabListeners();
+            setupThemeSwitcher();
+            // ---------------------------------
+        };
+        
+        // --- ADDED: TAB SWITCHING LOGIC ---
+        const setupTabListeners = () => {
+            const tabLinks = document.querySelectorAll('.tab-link');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    // Deactivate all tabs
+                    tabLinks.forEach(l => l.classList.remove('active'));
+                    tabContents.forEach(c => c.classList.remove('active'));
+
+                    // Activate the clicked tab
+                    const tabName = link.dataset.tab;
+                    link.classList.add('active');
+                    document.getElementById(`${tabName}-content`).classList.add('active');
+                });
+            });
+        };
+
+        // --- ADDED: THEME SWITCHER LOGIC ---
+        const setupThemeSwitcher = () => {
+            themeSwitcher.addEventListener('change', (e) => {
+                const theme = e.target.value;
+                document.body.className = 'antialiased text-gray-800'; // Reset classes
+                if (theme !== 'default') {
+                    document.body.classList.add(`theme-${theme}`);
+                }
+                
+                // Save theme preference to Firestore
+                if (userId) {
+                    const settingsRef = doc(db, `users/${userId}/settings/main`);
+                    setDoc(settingsRef, { theme: theme }, { merge: true });
+                }
+            });
+        };
+
+        const fetchLogs = () => {
+            if (!userId) return;
+            const logsRef = collection(db, `users/${userId}/logs`);
+            const q = query(logsRef, orderBy('date', 'desc'));
+            if (unsubscribeLogs) unsubscribeLogs();
+            unsubscribeLogs = onSnapshot(q, snapshot => {
+                allLogs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                updateDashboard(allLogs, userSettings);
+                renderLogs(allLogs);
+                renderGallery(allLogs);
+                updateStats(allLogs);
+                renderTimeline(allLogs);
+                checkAchievements();
+            });
+        };
+        
+        const fetchJewelry = () => {
+            if (!userId) return;
+            const jewelryRef = collection(db, `users/${userId}/jewelry`);
+            const q = query(jewelryRef, orderBy('sizeMM', 'asc'));
+            if (unsubscribeJewelry) unsubscribeJewelry();
+            unsubscribeJewelry = onSnapshot(q, snapshot => {
+                allJewelry = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderInventory('inventory');
+                checkAchievements();
+            });
+        };
+
+        const fetchWishlist = () => {
+            if(!userId) return;
+            const wishlistRef = collection(db, `users/${userId}/wishlist`);
+            const q = query(wishlistRef, orderBy('sizeMM', 'asc'));
+            if(unsubscribeWishlist) unsubscribeWishlist();
+            unsubscribeWishlist = onSnapshot(q, snapshot => {
+                allWishlistItems = snapshot.docs.map(doc => ({id: doc.id, ...doc.data() }));
+                renderInventory('wishlist');
+                checkAchievements();
+            });
+        };
+
+        const fetchSettings = () => {
+            if (!userId) return;
+            const settingsRef = doc(db, `users/${userId}/settings/main`);
+            if (unsubscribeSettings) unsubscribeSettings();
+            unsubscribeSettings = onSnapshot(settingsRef, docSnap => {
+                userSettings = docSnap.exists() ? docSnap.data() : { reminders: true, achievements: {} };
+                if (userSettings.goalSize) {
+                    goalSizeInput.value = userSettings.goalSize;
+                }
+                if (userSettings.theme) {
+                    themeSwitcher.value = userSettings.theme;
+                    document.body.className = 'antialiased text-gray-800';
+                    if (userSettings.theme !== 'default') {
+                       document.body.classList.add(`theme-${userSettings.theme}`);
+                    }
+                }
+                reminderToggle.checked = userSettings.reminders !== false;
+                updateDashboard(allLogs, userSettings);
+                renderAchievements();
+            });
+        };
+
+        const checkAchievements = () => {
+            if (!allLogs.length) return;
+            const unlocked = [];
+
+            if (!userSettings.achievements?.firstStep) {
+                achievements.firstStep.unlocked = true;
+                unlocked.push('firstStep');
+            }
+            if (!userSettings.achievements?.size8mm && allLogs.some(l => parseSizeToMM(l.size) >= 8)) {
+                achievements.size8mm.unlocked = true;
+                unlocked.push('size8mm');
+            }
+            if (!userSettings.achievements?.photographer && allLogs.filter(l => l.photoURL).length >= 5) {
+                achievements.photographer.unlocked = true;
+                unlocked.push('photographer');
+            }
+             if (!userSettings.achievements?.collector && allJewelry.length >= 5) {
+                achievements.collector.unlocked = true;
+                unlocked.push('collector');
+            }
+            if (!userSettings.achievements?.wishful && allWishlistItems.length > 0) {
+                 achievements.wishful.unlocked = true;
+                 unlocked.push('wishful');
+            }
+            const stretchUps = allLogs.filter(l => l.logType === 'stretch-up').sort((a,b) => new Date(a.date) - new Date(b.date));
+            if (stretchUps.length > 1) {
+                if (!userSettings.achievements?.patience) {
+                    for (let i = 1; i < stretchUps.length; i++) {
+                        const date1 = new Date(stretchUps[i].date);
+                        const date2 = new Date(stretchUps[i-1].date);
+                        const diffDays = Math.ceil(Math.abs(date1 - date2) / (1000 * 60 * 60 * 24));
+                        if (diffDays > 60) {
+                            achievements.patience.unlocked = true;
+                            unlocked.push('patience');
+                            break;
+                        }
+                    }
+                }
+                if (!userSettings.achievements?.oneYear) {
+                    const firstDate = new Date(stretchUps[0].date);
+                    const lastDate = new Date(stretchUps[stretchUps.length - 1].date);
+                    if ((lastDate - firstDate) / (1000 * 60 * 60 * 24 * 365) >= 1) {
+                        achievements.oneYear.unlocked = true;
+                        unlocked.push('oneYear');
+                    }
+                }
+            }
+            
+            if (unlocked.length > 0) {
+                const newAchievements = { ...userSettings.achievements };
+                unlocked.forEach(key => {
+                    newAchievements[key] = true;
+                    showAchievementModal(achievements[key]);
+                });
+                const settingsRef = doc(db, `users/${userId}/settings/main`);
+                setDoc(settingsRef, { achievements: newAchievements }, { merge: true });
+            }
+             renderAchievements();
+        };
+
+        const exportData = () => {
+            if (!allLogs.length && !allJewelry.length) {
+                alert("No data to export!");
+                return;
+            }
+            const data = {
+                logs: allLogs,
+                jewelry: allJewelry,
+                wishlist: allWishlistItems,
+                settings: userSettings
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `lobe-ledger-backup-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        };
+        
+        const importData = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                try {
+                    const data = JSON.parse(event.target.result);
+                    if (confirm("This will overwrite your current cloud data. Are you sure?")) {
+                        const batch = writeBatch(db);
+
+                        if (data.settings) {
+                           const settingsRef = doc(db, `users/${userId}/settings/main`);
+                           batch.set(settingsRef, data.settings);
+                        }
+                        if (data.logs) {
+                            data.logs.forEach(log => {
+                                const logRef = doc(collection(db, `users/${userId}/logs`));
+                                batch.set(logRef, log);
+                            });
+                        }
+                        if (data.jewelry) {
+                           data.jewelry.forEach(item => {
+                                const jewelryRef = doc(collection(db, `users/${userId}/jewelry`));
+                                batch.set(jewelryRef, item);
+                            });
+                        }
+                        if (data.wishlist) {
+                           data.wishlist.forEach(item => {
+                                const wishlistRef = doc(collection(db, `users/${userId}/wishlist`));
+                                batch.set(wishlistRef, item);
+                            });
+                        }
+                        await batch.commit();
+                        alert("Data imported successfully!");
+                    }
+                } catch (err) {
+                    alert("Failed to import data. The file might be corrupted.");
+                    console.error("Import error:", err);
+                }
+            };
+            reader.readAsText(file);
+        };
+        
+        // --- SECTION 5: UI RENDERING & EVENT HANDLERS ---
+        
+        const clearAllData = () => {
+             document.getElementById('log-container').innerHTML = '<p class="text-center text-gray-500 py-8">Please sign in to view your log.</p>';
+             document.getElementById('gallery-content').innerHTML = '<p class="text-center text-gray-500 py-8">Please sign in to view your gallery.</p>';
+             document.getElementById('inventory-content').innerHTML = '<p class="text-center text-gray-500 py-8">Please sign in to view your inventory.</p>';
+             document.getElementById('timeline-container').innerHTML = '<p class="text-center text-gray-500 py-8">Please sign in to view your timeline.</p>';
+             document.getElementById('achievements-content').innerHTML = '<p class="text-center text-gray-500 py-8">Please sign in to view your achievements.</p>';
+             updateDashboard([], null);
+             updateStats([]);
+        };
+
+        const parseSizeToMM = (sizeString) => {
+            if (!sizeString) return 0;
+            const match = String(sizeString).match(/(\d+(\.\d+)?)/);
+            return match ? parseFloat(match[0]) : 0;
+        };
+        
+        const updateDashboard = (logs, settings) => {
+             const reminderCard = document.getElementById('reminder-card');
+             const nextStretchDateEl = document.getElementById('next-stretch-date');
+
+             if (logs.length === 0) {
+                document.getElementById('current-size').textContent = 'N/A';
+                document.getElementById('last-stretch-date').textContent = 'N/A';
+                nextStretchDateEl.textContent = 'N/A';
+                if(reminderCard) reminderCard.classList.add('hidden');
+             } else {
+                const latestLog = logs[0];
+                const lastDate = new Date(latestLog.date + 'T00:00:00');
+                document.getElementById('current-size').textContent = latestLog.size;
+                document.getElementById('last-stretch-date').textContent = lastDate.toLocaleDateString();
+                
+                const lastStretchEventLog = logs.find(log => log.logType === 'stretch-up' || log.logType === 'downsize');
+
+                if (lastStretchEventLog) {
+                    const lastStretchEventDate = new Date(lastStretchEventLog.date + 'T00:00:00');
+                    let waitDays = 45; 
+                    if (lastStretchEventLog.logType === 'downsize') {
+                        waitDays = 60;
+                    }
+                    
+                    const nextDate = new Date(lastStretchEventDate);
+                    nextDate.setDate(nextDate.getDate() + waitDays);
+                    nextStretchDateEl.textContent = nextDate.toLocaleDateString();
+
+                    if (new Date() > nextDate && userSettings.reminders !== false) {
+                        if(reminderCard) reminderCard.classList.remove('hidden');
+                    } else {
+                        if(reminderCard) reminderCard.classList.add('hidden');
+                    }
+                } else {
+                    nextStretchDateEl.textContent = 'Ready when you are!';
+                    if(reminderCard) reminderCard.classList.add('hidden');
+                }
+            }
+            
+            const goalSize = settings && settings.goalSize ? parseSizeToMM(settings.goalSize) : 0;
+            const currentSize = logs.length > 0 ? parseSizeToMM(logs[0].size) : 0;
+            const progressText = document.getElementById('progress-text');
+            const progressBar = document.getElementById('progress-bar');
+            if (goalSize > 0) {
+                const percentage = Math.min((currentSize / goalSize) * 100, 100);
+                progressBar.style.width = `${percentage}%`;
+                progressText.textContent = `${currentSize}mm / ${goalSize}mm`;
+            } else {
+                 progressBar.style.width = '0%';
+                 progressText.textContent = 'Set a goal to see your progress!';
+            }
+        };
+        
+        const handleSetGoal = async () => {
+            if (!userId) return;
+            const goalSize = goalSizeInput.value.trim();
+            if (goalSize) {
+                const settingsRef = doc(db, `users/${userId}/settings/main`);
+                await setDoc(settingsRef, { goalSize: goalSize }, { merge: true });
+                alert('Goal updated!');
+            }
+        };
+
+        const renderLogs = (logs) => {
+            const container = document.getElementById('log-container');
+            container.innerHTML = `<h2 class="text-2xl font-bold mb-4">Recent Logs</h2>`;
+            if (logs.length === 0) {
+                container.innerHTML += `<div class="card p-8 text-center"><p class="text-gray-500">No entries yet. Time to start your journey!</p></div>`;
+                return;
+            }
+            logs.slice(0, 5).forEach(log => {
+                const logEl = document.createElement('div');
+                logEl.className = `card p-4 my-4 log-entry log-entry-${log.logType} relative`;
+                const sizeMM = parseSizeToMM(log.size);
+                const circleRadius = Math.max(4, sizeMM * 1.5);
+                
+                logEl.innerHTML = `
+                    <div class="absolute top-2 right-2 flex gap-2">
+                        <button data-action="edit" class="p-1 rounded-full bg-gray-100 hover:bg-gray-200">
+                            <svg class="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                        </button>
+                        <button data-action="delete" class="p-1 rounded-full bg-gray-100 hover:bg-gray-200">
+                           <svg class="h-4 w-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    </div>
+                    ${log.photoURL ? `<img src="${log.photoURL}" class="w-full h-auto rounded-md mb-2 max-h-60 object-cover">` : ''}
+                    <div class="flex items-center gap-3">
+                         <svg width="${circleRadius * 2}" height="${circleRadius * 2}" viewbox="0 0 ${circleRadius * 2} ${circleRadius * 2}"><circle cx="${circleRadius}" cy="${circleRadius}" r="${circleRadius-1}" stroke="currentColor" stroke-width="2" fill="none" style="color: var(--brand-secondary);" /></svg>
+                        <p class="font-bold text-lg" style="color: var(--brand-secondary);">${log.size}</p>
+                    </div>
+                    <p class="text-sm text-gray-500">${new Date(log.date + 'T00:00:00').toLocaleDateString()}</p>
+                    <p class="mt-2 text-sm">${log.notes || ''}</p>
+                    <div class="text-xs mt-2">
+                        <span>Type: ${log.logType}</span> | 
+                        <span>Material: ${log.material || 'N/A'}</span> | 
+                        <span>Irritation: ${log.irritation}/5</span>
+                    </div>
+                `;
+                logEl.querySelector('[data-action="edit"]').addEventListener('click', () => showEditLogModal(log));
+                logEl.querySelector('[data-action="delete"]').addEventListener('click', () => showDeleteLogModal(log));
+                container.appendChild(logEl);
+            });
+        };
+        
+        const renderGallery = (logs) => {
+            const container = document.getElementById('gallery-content');
+            container.innerHTML = `<h2 class="text-3xl font-bold mb-6 text-center">Your Photo Gallery</h2>`;
+            const logsWithPhotos = logs.filter(log => log.photoURL);
+
+            if (logsWithPhotos.length === 0) {
+                 container.innerHTML += `<div class="card p-8 text-center"><p class="text-gray-500">Your gallery is empty. Add photos to your logs to see them here!</p></div>`;
+                 return;
+            }
+            
+            const grid = document.createElement('div');
+            grid.className = 'grid grid-cols-2 md:grid-cols-3 gap-4';
+            logsWithPhotos.forEach(log => {
+                const itemEl = document.createElement('div');
+                itemEl.className = 'card p-2 text-center';
+                itemEl.innerHTML = `
+                    <img src="${log.photoURL}" class="w-full h-48 object-cover rounded-md mb-2">
+                    <p class="font-bold">${log.size}</p>
+                    <p class="text-sm text-gray-500">${new Date(log.date + 'T00:00:00').toLocaleDateString()}</p>
+                `;
+                grid.appendChild(itemEl);
+            });
+            container.appendChild(grid);
+        };
+
+        const updateStats = (logs) => {
+            const stretchUps = logs.filter(l => l.logType === 'stretch-up').sort((a,b) => new Date(a.date) - new Date(b.date));
+            document.getElementById('stats-total-stretches').textContent = stretchUps.length;
+
+            if (stretchUps.length > 1) {
+                let totalDays = 0;
+                let longestWait = 0;
+                for (let i = 1; i < stretchUps.length; i++) {
+                    const date1 = new Date(stretchUps[i].date);
+                    const date2 = new Date(stretchUps[i-1].date);
+                    const diffTime = Math.abs(date1 - date2);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    totalDays += diffDays;
+                    if(diffDays > longestWait) longestWait = diffDays;
+                }
+                document.getElementById('stats-avg-time').textContent = `${Math.round(totalDays / (stretchUps.length - 1))} days`;
+                document.getElementById('stats-longest-wait').textContent = `${longestWait} days`;
+            } else {
+                document.getElementById('stats-avg-time').textContent = 'N/A';
+                document.getElementById('stats-longest-wait').textContent = 'N/A';
+            }
+            
+            if (logs.length > 0) {
+                const materials = logs.map(l => l.material).filter(Boolean);
+                if (materials.length > 0) {
+                    const counts = materials.reduce((acc, val) => {
+                        acc[val] = (acc[val] || 0) + 1;
+                        return acc;
+                    }, {});
+                    const favMaterial = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
+                    document.getElementById('stats-fav-material').textContent = favMaterial;
+                } else {
+                     document.getElementById('stats-fav-material').textContent = 'N/A';
+                }
+            } else {
+                document.getElementById('stats-fav-material').textContent = 'N/A';
+            }
+        };
+
+        const renderTimeline = (logs) => {
+            const container = document.getElementById('timeline-container');
+            container.innerHTML = '';
+            if (logs.length === 0) {
+                container.innerHTML = `<p class="text-center text-gray-500 py-8">Your timeline will appear here as you add logs.</p>`;
+                return;
+            }
+            const reversedLogs = [...logs].reverse(); // Show oldest first
+            reversedLogs.forEach(log => {
+                const item = document.createElement('div');
+                item.className = 'mb-8 relative';
+                item.innerHTML = `
+                    <div class="absolute w-4 h-4 rounded-full -left-2 top-1 transform -translate-x-1/2 border-4" style="background-color: var(--brand-secondary); border-color: var(--bg-secondary);"></div>
+                    <div class="ml-6">
+                        <div class="flex items-center mb-1">
+                            <p class="font-bold">${log.size}</p>
+                            <p class="text-sm text-gray-500 ml-2">(${new Date(log.date + 'T00:00:00').toLocaleDateString()})</p>
+                        </div>
+                        <p class="text-sm capitalize">Type: <span class="font-semibold">${log.logType.replace('-', ' ')}</span>, Material: <span class="font-semibold">${log.material || 'N/A'}</span></p>
+                        <p class="text-sm text-gray-600 mt-1">${log.notes || ''}</p>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        };
+
+        const renderInventory = (type) => {
+            const container = document.getElementById('inventory-content');
+            if (!container.querySelector('#inventory-sub-tabs')) {
+                 container.innerHTML = `
+                    <div id="inventory-sub-tabs" class="flex justify-between items-center mb-4">
+                        <h2 class="text-3xl font-bold">Jewelry</h2>
+                        <div class="flex gap-2">
+                           <button data-subtab="inventory" class="sub-tab-link active">Inventory</button>
+                           <button data-subtab="wishlist" class="sub-tab-link">Wishlist</button>
+                        </div>
+                    </div>
+                    <div id="inventory-container"></div>
+                    <div id="wishlist-container" style="display: none;"></div>
+                `;
+                 document.querySelectorAll('.sub-tab-link').forEach(link => {
+                    link.addEventListener('click', (e) => {
+                        document.querySelectorAll('.sub-tab-link').forEach(l => l.classList.remove('active'));
+                        e.target.classList.add('active');
+                        if (e.target.dataset.subtab === 'inventory') {
+                            document.getElementById('inventory-container').style.display = 'block';
+                            document.getElementById('wishlist-container').style.display = 'none';
+                        } else {
+                            document.getElementById('inventory-container').style.display = 'none';
+                            document.getElementById('wishlist-container').style.display = 'block';
+                        }
+                    });
+                });
+            }
+
+            const items = type === 'inventory' ? allJewelry : allWishlistItems;
+            const subContainerId = `${type}-container`;
+            const subContainer = document.getElementById(subContainerId);
+            const title = type.charAt(0).toUpperCase() + type.slice(1);
+
+            subContainer.innerHTML = `
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-2xl font-bold">${title}</h3>
+                    <button id="add-${type}-btn" class="btn-primary font-bold py-2 px-4 rounded-md">Add to ${title}</button>
+                </div>
+            `;
+            
+            if (items.length === 0) {
+                subContainer.innerHTML += `<div class="card p-8 text-center"><p class="text-gray-500">Your ${type} is empty.</p></div>`;
+            } else {
+                 const grid = document.createElement('div');
+                 grid.className = 'grid grid-cols-2 md:grid-cols-4 gap-4';
+                 items.forEach(item => {
+                    const itemEl = document.createElement('div');
+                    itemEl.className = 'card p-2 text-center relative';
+                    itemEl.innerHTML = `
+                         <div class="absolute top-1 right-1 flex gap-1">
+                            <button data-action="delete-jewelry" class="p-1 rounded-full bg-gray-100 hover:bg-gray-200 opacity-75 hover:opacity-100">
+                               <svg class="h-4 w-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            </button>
+                         </div>
+                         <img src="${item.photoURL || 'https://placehold.co/200x200/e2e8f0/e2e8f0?text=Jewelry'}" class="w-full h-32 object-cover rounded-md mb-2">
+                         <p class="font-bold">${item.size}</p>
+                         <p class="text-sm text-gray-500">${item.notes || ''}</p>
+                    `;
+                    itemEl.querySelector('[data-action="delete-jewelry"]').addEventListener('click', () => showDeleteJewelryModal(item, type));
+                    grid.appendChild(itemEl);
+                 });
+                 subContainer.appendChild(grid);
+            }
+            
+            document.getElementById(`add-${type}-btn`).addEventListener('click', () => showAddJewelryModal(type));
+        };
+        
+        const renderAchievements = () => {
+            const container = document.getElementById('achievements-content');
+            container.innerHTML = `<h2 class="text-3xl font-bold mb-6 text-center">Your Achievements</h2>`;
+            const grid = document.createElement('div');
+            grid.className = 'grid grid-cols-2 md:grid-cols-3 gap-4';
+
+            for (const key in achievements) {
+                const achievement = achievements[key];
+                const isUnlocked = userSettings.achievements && userSettings.achievements[key];
+                const card = document.createElement('div');
+                card.className = `card p-4 text-center achievement-card ${isUnlocked ? 'unlocked' : ''}`;
+                card.innerHTML = `
+                    <p class="text-4xl mb-2">${achievement.icon}</p>
+                    <p class="font-bold">${achievement.title}</p>
+                    <p class="text-xs" style="color: var(--text-secondary);">${achievement.description}</p>
+                `;
+                grid.appendChild(card);
+            }
+            container.appendChild(grid);
+        };
+        
+        // ... all other javascript functions for modals, forms, etc. ...
+        
+        const handleLogSubmit = async (e) => {
+            e.preventDefault();
+            if (!userId) return;
+            const btn = document.getElementById('log-stretch-btn');
+            btn.disabled = true;
+            btn.textContent = 'Saving...';
+            
+            try {
+                const photoFile = document.getElementById('stretch-photo').files[0];
+                let photoURL = null;
+                let storagePath = null;
+                if (photoFile) {
+                    storagePath = `users/${userId}/log_images/${Date.now()}-${photoFile.name}`;
+                    const storageRef = ref(storage, storagePath);
+                    await uploadBytes(storageRef, photoFile);
+                    photoURL = await getDownloadURL(storageRef);
+                }
+
+                const logData = {
+                    date: document.getElementById('stretch-date').value,
+                    logType: document.getElementById('log-type').value,
+                    size: document.getElementById('stretch-size').value,
+                    material: document.getElementById('jewelry-material').value,
+                    irritation: document.getElementById('irritation-level').value,
+                    notes: document.getElementById('stretch-notes').value,
+                    photoURL,
+                    storagePath,
+                    createdAt: serverTimestamp()
+                };
+                await addDoc(collection(db, `users/${userId}/logs`), logData);
+                stretchForm.reset();
+                document.getElementById('stretch-date').valueAsDate = new Date();
+            } catch (error) {
+                console.error("Error saving log:", error);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Log Entry';
+            }
+        };
+
+        const showEditLogModal = (log) => {
+             openModal(`
+                <h2 class="text-2xl font-bold mb-4">Edit Entry</h2>
+                <form id="edit-log-form">
+                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Date</label>
+                            <input type="date" id="edit-stretch-date" value="${log.date}" class="w-full p-2 border rounded-md" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Log Type</label>
+                            <select id="edit-log-type" class="w-full p-2 border rounded-md">
+                                <option value="stretch-up" ${log.logType === 'stretch-up' ? 'selected' : ''}>Stretch Up</option>
+                                <option value="downsize" ${log.logType === 'downsize' ? 'selected' : ''}>Downsize</option>
+                                <option value="maintenance" ${log.logType === 'maintenance' ? 'selected' : ''}>Maintenance</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Current Size</label>
+                            <input type="text" id="edit-stretch-size" value="${log.size}" class="w-full p-2 border rounded-md" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Jewelry Material</label>
+                            <input type="text" id="edit-jewelry-material" value="${log.material || ''}" class="w-full p-2 border rounded-md">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium mb-1">Irritation Level</label>
+                            <input type="range" id="edit-irritation-level" min="1" max="5" value="${log.irritation || 1}" class="w-full">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium mb-1">Notes</label>
+                            <textarea id="edit-stretch-notes" rows="3" class="w-full p-2 border rounded-md">${log.notes || ''}</textarea>
+                        </div>
+                         <div class="md:col-span-2">
+                            <label class="block text-sm font-medium mb-1">Change Photo</label>
+                            <input type="file" id="edit-stretch-photo" name="edit-stretch-photo" accept="image/*" class="w-full text-sm">
+                        </div>
+                    </div>
+                    <div class="mt-6 flex justify-end gap-3">
+                        <button type="button" data-action="close" class="font-bold py-2 px-4 rounded-md">Cancel</button>
+                        <button type="submit" class="btn-primary font-bold py-2 px-4 rounded-md">Save Changes</button>
+                    </div>
+                </form>
+            `);
+            document.getElementById('edit-log-form').addEventListener('submit', (e) => handleUpdateLog(e, log));
+        };
+        
+        const handleUpdateLog = async (e, log) => {
+            e.preventDefault();
+            if(!userId) return;
+            const form = e.target;
+            const btn = form.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.textContent = "Saving...";
+
+            try {
+                const updatedData = {
+                    date: document.getElementById('edit-stretch-date').value,
+                    logType: document.getElementById('edit-log-type').value,
+                    size: document.getElementById('edit-stretch-size').value,
+                    material: document.getElementById('edit-jewelry-material').value,
+                    irritation: document.getElementById('edit-irritation-level').value,
+                    notes: document.getElementById('edit-stretch-notes').value,
+                };
+                
+                const photoFile = document.getElementById('edit-stretch-photo').files[0];
+                if (photoFile) {
+                    if (log.storagePath) {
+                        await deleteObject(ref(storage, log.storagePath)).catch(err => console.error("Old photo not found, proceeding.", err));
+                    }
+                    const newStoragePath = `users/${userId}/log_images/${Date.now()}-${photoFile.name}`;
+                    const newStorageRef = ref(storage, newStoragePath);
+                    await uploadBytes(newStorageRef, photoFile);
+                    updatedData.photoURL = await getDownloadURL(newStorageRef);
+                    updatedData.storagePath = newStoragePath;
+                }
+
+                await updateDoc(doc(db, `users/${userId}/logs`, log.id), updatedData);
+            } catch(error) {
+                console.error("Error updating log:", error);
+            } finally {
+                closeModal();
+            }
+        };
+
+        const showDeleteLogModal = (log) => {
+            openModal(`
+                <h2 class="text-2xl font-bold mb-4">Delete Entry?</h2>
+                <p>Are you sure you want to delete the log entry for <strong>${log.size}</strong> from ${new Date(log.date + 'T00:00:00').toLocaleDateString()}?</p>
+                <div class="mt-6 flex justify-end gap-3">
+                    <button type="button" data-action="close" class="font-bold py-2 px-4 rounded-md">Cancel</button>
+                    <button id="confirm-delete-btn" class="btn-danger font-bold py-2 px-4 rounded-md">Delete</button>
+                </div>
+            `);
+            document.getElementById('confirm-delete-btn').addEventListener('click', () => handleDeleteLog(log));
+        };
+        
+        const handleDeleteLog = async (log) => {
+            if (!userId) return;
+            try {
+                if (log.storagePath) {
+                    await deleteObject(ref(storage, log.storagePath));
+                }
+                await deleteDoc(doc(db, `users/${userId}/logs`, log.id));
+            } catch(error) {
+                console.error("Error deleting log:", error);
+            } finally {
+                closeModal();
+            }
+        };
+
+        const showAddJewelryModal = (type) => {
+            const title = type === 'inventory' ? 'Add Jewelry' : 'Add to Wishlist';
+             openModal(`
+                <h2 class="text-2xl font-bold mb-4">${title}</h2>
+                <form id="jewelry-form">
+                    <div class="space-y-4">
+                        <div>
+                            <label for="jewelry-size" class="block text-sm font-medium">Size (mm or g)</label>
+                            <input type="text" id="jewelry-size" class="w-full p-2 border rounded-md" required>
+                        </div>
+                        <div>
+                            <label for="jewelry-notes" class="block text-sm font-medium">Notes (e.g., material, color)</label>
+                            <textarea id="jewelry-notes" rows="2" class="w-full p-2 border rounded-md"></textarea>
+                        </div>
+                        <div>
+                            <label for="jewelry-photo" class="block text-sm font-medium">Photo</label>
+                            <input type="file" id="jewelry-photo" name="jewelry-photo" accept="image/*" class="w-full text-sm">
+                        </div>
+                    </div>
+                    <div class="mt-6 flex justify-end gap-3">
+                        <button type="button" data-action="close" class="font-bold py-2 px-4 rounded-md">Cancel</button>
+                        <button type="submit" class="btn-primary font-bold py-2 px-4 rounded-md">Save</button>
+                    </div>
+                </form>
+            `);
+            document.getElementById('jewelry-form').addEventListener('submit', (e) => handleAddJewelry(e, type));
+        };
+        
+        const handleAddJewelry = async (e, type) => {
+            e.preventDefault();
+            if(!userId) return;
+            const form = e.target;
+            const btn = form.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.textContent = "Saving...";
+
+            try {
+                const photoFile = document.getElementById('jewelry-photo').files[0];
+                let photoURL = null;
+                let storagePath = null;
+                if(photoFile){
+                    storagePath = `users/${userId}/${type}_images/${Date.now()}-${photoFile.name}`;
+                    const storageRef = ref(storage, storagePath);
+                    await uploadBytes(storageRef, photoFile);
+                    photoURL = await getDownloadURL(storageRef);
+                }
+                const size = document.getElementById('jewelry-size').value;
+                const jewelryData = {
+                    size: size,
+                    sizeMM: parseSizeToMM(size),
+                    notes: document.getElementById('jewelry-notes').value,
+                    photoURL,
+                    storagePath,
+                    createdAt: serverTimestamp()
+                };
+                await addDoc(collection(db, `users/${userId}/${type}`), jewelryData);
+            } catch (error) {
+                console.error(`Error adding to ${type}`, error);
+            } finally {
+                closeModal();
+            }
+        };
+
+        const showDeleteJewelryModal = (item, type) => {
+            openModal(`
+                <h2 class="text-2xl font-bold mb-4">Delete Item?</h2>
+                <p>Are you sure you want to delete this item from your ${type}?</p>
+                <div class="mt-6 flex justify-end gap-3">
+                    <button type="button" data-action="close" class="font-bold py-2 px-4 rounded-md">Cancel</button>
+                    <button id="confirm-delete-jewelry-btn" class="btn-danger font-bold py-2 px-4 rounded-md">Delete</button>
+                </div>
+            `);
+            document.getElementById('confirm-delete-jewelry-btn').addEventListener('click', () => handleDeleteJewelry(item, type));
+        };
+        
+        const handleDeleteJewelry = async (item, type) => {
+            if (!userId) return;
+            try {
+                if (item.storagePath) {
+                    await deleteObject(ref(storage, item.storagePath));
+                }
+                await deleteDoc(doc(db, `users/${userId}/${type}`, item.id));
+            } catch(error) {
+                console.error(`Error deleting from ${type}:`, error);
+            } finally {
+                closeModal();
+            }
+        };
+        
+        const showAchievementModal = (achievement) => {
+            openModal(`
+                 <div class="text-center">
+                    <p class="text-6xl mb-4">${achievement.icon}</p>
+                    <h2 class="text-2xl font-bold mb-2">Achievement Unlocked!</h2>
+                    <p class="font-semibold">${achievement.title}</p>
+                    <p style="color: var(--text-secondary);">${achievement.description}</p>
+                    <div class="mt-6">
+                        <button data-action="close" class="btn-primary font-bold py-2 px-6 rounded-md">Awesome!</button>
+                    </div>
+                </div>
+            `);
+        };
+
+        const handleReminderToggle = (e) => {
+             if (!userId) return;
+             const settingsRef = doc(db, `users/${userId}/settings/main`);
+             setDoc(settingsRef, { reminders: e.target.checked }, { merge: true });
+        };
+        
+        const openModal = (content) => {
+            mainModal.innerHTML = `<div class="modal-content card">${content}</div>`;
+            mainModal.classList.remove('hidden');
+            // Check if a close button exists before adding the listener
+            const closeButton = mainModal.querySelector('[data-action="close"]');
+            if (closeButton) {
+                closeButton.addEventListener('click', closeModal);
+            }
+        };
+        const closeModal = () => mainModal.classList.add('hidden');
+
+        init();
+    </script>
+</body>
+</html>
